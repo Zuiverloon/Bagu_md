@@ -32,3 +32,25 @@ eg: 索引(a,b,c)
 where a = 1 and b = 1(yes)  
 where a = 1 and c = 1(yes 只用到了索引a)  
 where b = 1 and c = 1(未命中)
+
+## ACID特性
+Atomic原子性：事务不可分割，要么全执行，要么全不执行  
+Consistency一致性：事务开始前、结束后数据库状态一致（银行转帐，有进有出）  
+Isolation隔离性：事务可并发执行，但对于一个事务感知不到另外的事务  
+Durability持久性：对数据库的操作是永久的    
+
+## 遇到慢查询怎么办  
+    explain select ...  
+用explain看下sql是怎么执行的，是否扫全表，是否命中了索引  
+
+## 有哪些存储引擎  
+
+INNODB(用于安全性要求高，频繁update的场景)：  
+1. 支持事务  
+2. 唯一支持外键约束
+3. 自动灾难恢复
+4. 支持auto_increment  
+
+MYISAM(用于较少的update，较多的select的场景):  
+1. 每次查询有原子性，速度快，无事务
+2. 允许没有索引和主键，索引保存行地址  
