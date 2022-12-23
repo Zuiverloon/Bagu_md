@@ -50,5 +50,5 @@ CWindow：congestion control，防止网络拥堵
 
 ## UDP
 
-header 8B 原端口 目的端口 长度 checksum  
+header(8B) 原端口 目的端口 长度 checksum  
 如果接收方 UDP 发现收到的报文中的目的端口号不正确（不存在对应端口号的应用进程 0,），就丢弃该报文，并由 ICMP 发送“端口不可达”差错报文给对方。
