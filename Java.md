@@ -2,12 +2,16 @@
 
 ## 哪种 String 存在常量池，哪种存在堆
 
-    String s1 = "helloworld";//常量池
-    String s2 = new String("helloworld");//堆
+```java
+String s1 = "helloworld";//常量池
+String s2 = new String("helloworld");//堆
+```
 
 ## 常量(final 关键字)
 
-    final int con = 1;
+```java
+final int con = 1;
+```
 
 ## final 类&方法
 
@@ -17,13 +21,17 @@ final 变量一旦赋值不可改变
 
 ## 作为类变量时的初始化
 
-    int i; // 0;
-    String s; // null
-    //如果是final变量，必须在构造函数中或直接初始化
+```java
+int i; // 0;
+String s; // null
+//如果是final变量，必须在构造函数中或直接初始化
+```
 
 ## 开辟数组会初始化
 
-    int a[] = new int[10];//初始化为0
+```java
+int a[] = new int[10];//初始化为0
+```
 
 ## 访问修饰符
 
@@ -34,10 +42,12 @@ package: 在包内可访问，在包外不可访问，不写默认是 package
 
 ## upcasting(子类转父类)/downcasting(父类转子类)
 
-    Parent p = new Child();//upcasting
+```java
+Parent p = new Child();//upcasting
 
-    Parent p = new Child();
-    Child c = (Child)p;//downcasting
+Parent p = new Child();
+Child c = (Child)p;//downcasting
+```
 
 ## 多态 polymorphism
 
@@ -107,42 +117,47 @@ TreeMap:也是存键值对，红黑树，排序遍历较快
 
 1.  继承 Thread，重写 run
 
-        class A extends Thread{
-            @Override
-            public void run(){
-                System.out.println("A");
-            }
-        }
+```java
+class A extends Thread{
+    @Override
+    public void run(){
+        System.out.println("A");
+    }
+}
 
-        //也可以用lambda表达式
-        Thread t = new Thread(()->{
-            System.out.println("haha");
-        });
-        t.start();//调用start方法才是启动了线程
+    //也可以用lambda表达式
+    Thread t = new Thread(()->{
+        System.out.println("haha");});
+    t.start();//调用start方法才是启动了线程
+```
 
 1.  实现 Runnable，重写 run
 
-        class B implements Runnable{
-            @Override
-            public void run(){
-                System.out.println("B");
-            }
-        }
-        Thread t2 = new Thread(new B());//作为参数传入Thread对象
-        t2.start();
+```java
+class B implements Runnable{
+    @Override
+    public void run(){
+        System.out.println("B");
+    }
+}
+    Thread t2 = new Thread(new B());//作为参数传入Thread对象
+    t2.start();
+```
 
 1.  实现 callable 接口,重写 call
 
-        class C implements Callable<String> {
-            @Override
-            public String call(){
-                System.out.println("C");
-                return "C";
-            }
-        }
+```java
+class C implements Callable<String> {
+    @Override
+    public String call(){
+        System.out.println("C");
+        return "C";
+    }
+}
 
-        Thread t3 = new Thread(new FutureTask<String>(new C()));
-        t3.start();
+    Thread t3 = new Thread(new FutureTask<String>(new C()));
+    t3.start();
+```
 
 ### callable 和 runnable 的区别
 
@@ -166,19 +181,27 @@ Callable 返回 future，且若有异常在 Future.get()时会抛出异常，通
 1.  调用 executor 创建四种中的一种  
     a. 单核心线程池
 
-        ExecutorService singleThreadPool = Executors.newSingleThreadExecutor();//只有一个线程执行，可按照(FIFO，LIFO，优先级)来执行，等待队列长度无界
+    ```java
+    ExecutorService singleThreadPool = Executors.newSingleThreadExecutor();//只有一个线程执行，可按照(FIFO，LIFO，优先级)来执行，等待队列长度无界
+    ```
 
     b. 可缓存线程池
 
-        ExecutorService newCachedPool = Executors.newCachedThreadPool(); //最大线程无穷大，会复用之前开的线程，可能导致爆内存
+    ```java
+    ExecutorService newCachedPool = Executors.newCachedThreadPool(); //最大线程无穷大，会复用之前开的线程，可能导致爆内存
+    ```
 
     c. 定长的线程池
 
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(2);//核心线程和最大线程都是n，也是无界队列
+    ```java
+    ExecutorService fixedThreadPool = Executors.newFixedThreadPool(2);//核心线程和最大线程都是n，也是无界队列
+    ```
 
     d. 周期性线程池
 
-        ExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(2);//可延时或定期的执行任务(调不同方法决定是延时还是定时)
+    ```java
+    ExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(2);//可延时或定期的执行任务(调不同方法决定是延时还是定时)
+    ```
 
 1.  调用 threadpoolexecutor 创建自定义所有参数的线程池
 

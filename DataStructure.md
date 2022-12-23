@@ -62,50 +62,78 @@ compare the neighbour elements to see whether they need to swap.
 
 选出一个 pivot value, put elements smaller than pivot to the left side, put elements greater than pivot value to the right side, recursively do sort on the left side and the right side.
 
-    void quicksort(arr,l,r){
-        int pivot = a[l];
-        int i = l,j = r;
-        if (i<r){
-            while (i<j){
-                while (i<=j && t<a[j]){
-                    j--;
-                }
-                if (i<j) a[i++] = a[j];
-                while (i<=j && t>a[i]){
-                    i++;
-                }
-                if (i<j) a[j--] = a[i];
+```c++
+void quicksort(int* arr,int l,int r){
+    int pivot = a[l];
+    int i = l,j = r;
+    if (i<r){
+        while (i<j){
+            while (i<=j && t<a[j]){
+                j--;
             }
-            a[i] = t;
-            quicksort(arr,l,i-1);
-            quicksort(arr,i+1,r);
+            if (i<j) a[i++] = a[j];
+            while (i<=j && t>a[i]){
+                i++;
+            }
+            if (i<j) a[j--] = a[i];
         }
+        a[i] = t;
+        quicksort(arr,l,i-1);
+        quicksort(arr,i+1,r);
     }
+}
+```
 
 ### **merge sort O(nlogn)**
 
 (分治法)divide the given list into 2 halves, sort the 2 halves and merge them together, recursively
 
-    sort(arr,left,right){
-        if (left<right){
-            int mid = (left+right)/2;
-            sort(arr,left,mid);
-            sort(arr,mid,right);
-            merge(arr,left,mid,right);
-        }
+```c++
+sort(int* arr,int left,int right){
+    if (left<right){
+        int mid = (left+right)/2;
+        sort(arr,left,mid);
+        sort(arr,mid,right);
+        merge(arr,left,mid,right);
     }
+}
 
-    merge(arr,l,m,r){
-        ...
-    }
+merge(int* arr,int l,int m,int r){
+    ...
+}
+```
 
 ### **heapsort O(nlogn)**
 
+heap 堆: 节点的值不比左子节点小，也不必右子节点小  
 make a heap to get the top value
 recursively find the top in each loop
+
+```c++
+//make initial heap
+for(int i = N/2;i>=0;i--){
+    heapify(arr,i,N);
+}
+//heapify
+void heapify(int* arr,int i,int N){
+    int j;int t;
+    while (i*2+1<n){
+        j = i*2+1;
+        t = nums[i];
+        if (j<n-1 && nums[j]<nums[j+1])j++;// find the greater element
+        if (t<nums[j]){// whether we need to swap
+            nums[i] = nums[j];
+            nums[j] = t;
+            i = j;//move to the next layer
+        }
+        else break;
+    }
+}
+```
 
 ## tree
 
 节点(node) 父节点(parent node) 子节点(child node) 同胞节点(sibling node) 叶子节点(leaf node) 中间节点(internal node) 路径(path) 边(edge)
-前序遍历(preorder,左，右，自己)、后序遍历(postorder，右，左，自己)、中序遍历(inorder 左，自己、右)、层次遍历(非递归，依靠队列实现)
-二叉树(binary tree)
+遍历(traverse)前序遍历(preorder,左，右，自己)、后序遍历(postorder，右，左，自己)、中序遍历(inorder 左，自己、右)、层次遍历(level order 非递归，依靠队列实现)
+二叉树(binary tree)  
+平衡二叉树 balanced tree:左右子树高度(gap between the length of the left and the right tree)在 1 和-1 之间
