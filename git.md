@@ -71,3 +71,5 @@ git merge master #别人修改了主分支，就要及时拉到本地并更新�
 ## stash
 
 如果在本分支上修改了但是没有 commit，如果想切换分支会导致丢失本次修改，用 stash 可以让修改不丢
+
+heihei
