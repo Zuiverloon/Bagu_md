@@ -17,6 +17,12 @@ bring a repo hosted elsewhere to my local machine
 
 track files and changes in Git
 
+```bash
+git add .
+git add a.txt
+git add -p a.txt #只add文件中的一部分，会跳出交互让我选
+```
+
 ## commit
 
 save files in Git
@@ -72,5 +78,19 @@ git merge master #别人修改了主分支，就要及时拉到本地并更新�
 
 如果在本分支上修改了但是没有 commit，如果想切换分支会导致丢失本次修改，用 stash 可以让修改不丢
 
-haha
-heihei
+## reset
+
+回退
+
+```bash
+git reset #回退add操作
+git reset HEAD~1 #回退一次commit，HEAD~1指向最近的一次commit
+git reset commitid #回退到这一次commitid 之后所有的修改都还在不过是unstaged(通过git log可以找到commitid)
+git reset --hard commitid #把commitid以后的代码全remove了
+```
+
+## fork
+
+把别人的项目照搬到我自己的名下，可以是为了以后 PR，可以是为了自己 DIY 功能
+
+测试 add
