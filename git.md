@@ -46,6 +46,7 @@ show all branches
 ```bash
 git branch # 查看所有分支
 git branch -d feature1 # 删除feature1分支
+git branch branch_name commitid #创建新分支，且以某个commitid为版本
 ```
 
 ## checkout
@@ -71,7 +72,8 @@ git diff feature-1 # 对比当前分支和feature-1分支
 
 ```bash
 git merge feature-1 # 合并feature-1分支到当前分支
-git merge master #别人修改了主分支，就要及时拉到本地并更新自己的开发分支，可能会冲突，需手动解决
+git merge master #别人修改了主分支，就要及时拉到本地并更新自己的开发分支，可能会冲突，需手动解决，解决完commit一下再merge就没冲突了
+git merge --abort #如果merge出了冲突，可以undo
 ```
 
 ## stash
@@ -93,4 +95,24 @@ git reset --hard commitid #把commitid以后的代码全remove了
 
 把别人的项目照搬到我自己的名下，可以是为了以后 PR，可以是为了自己 DIY 功能
 
-测试 add
+## rebase
+
+类似于 merge，但是合并的步骤不同（rebase 会修改当前 commit 的父节点，而 merge 是新增一个 commit）  
+如果已经 push 了就不要 rebase 了，rebase 用于清理本地 commit 历史  
+**交互式 rebase**(仅用于本地)：
+
+```bash
+git rebase -i HEAD~1 #交互式编辑最新的commit
+```
+
+## Pull Request
+
+invites reviewers to provide feedback before merging. / contribute code to other repo
+
+## cherry pick
+
+integrate commit(not used often)仅用于 commit 到了错的 branch 上的时候
+
+## reflog
+
+recover deleted commits or branches
