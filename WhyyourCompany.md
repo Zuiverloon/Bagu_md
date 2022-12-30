@@ -1,3 +1,42 @@
+<!--
+# Template
+
+**what do you know about our company?**
+ **why this job**
+ **这个岗位可能要干什么**
+ **why do we hire you**
+ **any question?**
+ -->
+
+# MSHF Tech Analyst
+
+**what do you know about our company?**  
+MSHF: joint venture company.(MS & Huaxin Securities), asset management service, Fund product(20-30 billions)  
+MS: one of the most famous company. Investment banking, consulting, asset manage, trading. **Values(do the right thing, put client first, lead with exceptional ideas, commit to diversity and inclusion, give back)**
+
+**why this job**  
+ MS famous. First job. Choose big name company. New grad can Receive training so I can have a solid foundation working in financial industry. Big platform to show my ability.  
+One value that is encouraged by MS. Do the right thing. Recognize and strongly agree with that. If not in the right way, no matter how hard, never reach the target.
+**why financial industry**
+Financial industry, stock market. Fin&Eco important to most people. Increase wealth.
+My work can really help&influence a lot of people, give me achievement.
+Financial markets and economy will gradually grow prosperous.
+
+**这个岗位可能要干什么**  
+ Internal system, develop tools&app for non-technical colleagues to improve work efficiency. Maintain reliability database, network, cloud services, internal software, low latency computing and trading system, data analysis help trading and risk controlling, modeling and AI,
+
+External system, web/mobile app for customers. Conveniently manage asset, help them increase wealth.
+
+**why do we hire you**
+
+1.  experience in software building from internships, quick to learn the leading tech and get used to the working env.
+2.  recognize the value of the company(especially about do the right thing and put client first).
+
+**any question?**  
+will I join application develop group if I given the offer?
+base?
+example about the application that you are doing.
+
 # DNB technical trainee
 
 ## what is DNB?
