@@ -22,9 +22,7 @@
 
 **why financial industry**
 
-1.Financial industry, stock market. Fin&Eco important to most people. Increase wealth.
-My work can really help&influence a lot of people, give me achievement.
-Financial markets and economy will gradually grow prosperous.
+1. Financial industry, stock market. Fin&Eco important to most people. Increase wealth.My work can really help&influence a lot of people, give me achievement.Financial markets and economy will gradually grow prosperous.
 
 **这个岗位可能要干什么**
 

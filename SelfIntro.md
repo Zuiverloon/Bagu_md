@@ -11,16 +11,17 @@ In my free time, I like watching sports games. To me, it is very inspiring. I en
 
 # Internships
 
-Meituan:
+Meituan:  
 New feature: Timetable panel. Customers book a seat in a restaurant. Owner can see customer information on the timetable panel. (9:00 am several customers). If all seats are booked, customers can no longer book a seat at that time.
 Several cases(no customers, several customers book the same time, several customers book different time. No seats to book).
 
-CTrip:
+CTrip:  
 New Feature: Add a Boolean field called useServicePackage to the simple refund apply interface. (Servicepackage is something similar to coupon.) If the value is true, we will refund more money if the customer has some coupons. In db, add a field in a table. When implementing this feature, first write the value into db, then if use, call another api to get how many coupons a customer has and the amount of the coupons. Calculate sum of the coupon amount and finally call function to proceed the refund.(fee calculation, validation, payment, generate a receipt or invoice)
 
-**experience in Devops platform?**  
-jenkins: link git repo to a jenkins project. run the testing case in the repo periodically by jenkins. We can see the result. If any errors occur, I can be informed and I will tell our developer to check.
-CICD: when we push the code into the git branch, it will automatically trigger the testing. I can also manually trigger it if I would like to test some code. It can also help me to pack and deploy the package to maven repo.
+**experience in Devops platform?**
+
+1. jenkins(run scheduled tasks): link git repo to a jenkins project. run the testing case in the repo periodically by jenkins. We can see the result. If any errors occur, I can be informed and I will tell our developer to check.
+2. CICD(continuous integration/deployment): when we push the code into the git branch, it will automatically trigger the testing. I can also manually trigger it if I would like to test some code. It can also help me to pack and deploy the package to maven repo.
 
 ## **Face with difficult task, how to deal with it?**
 
@@ -34,11 +35,11 @@ I followed this pattern and build every component one by one. When you get the i
 
 ## **work on a team/make difficult decision**
 
-undergrad, work with my roommate to build an online website as our course project. I was the team leader and had another 2 guys. We agree that everyone should be involved in this project, everyone should at least do something. I would like to develop the backend part(db management). At the same time,they were waiting for me to give them a task. It is always difficult to give instructions to roommates. So I asked them what they would like to be responsible for. Luckily one guy was willing to write the front end page and the other guy who is good at speaking, he was willing to prepare for the final presentation. Luckily we were responsible for different part, everyone had his own work to do. When implementing the project, we talk about the detail together, solve problem together and finally we put everything into a complete project.
+undergrad, work with my roommate to build an online website as our course project. I was the team leader and had another 2 guys. My teammates were waiting for me to give them tasks so that we can finish the project together. It is always difficult to give instructions to roommates. So I asked them what they would like to be responsible for to see how to make arrangement. Luckily one guy was willing to write the front end page and the other guy who is good at speaking, he was willing to prepare for the final presentation. Luckily we were willing to responsible for different part, everyone had his own work to do. When implementing the project, we talk about the detail together, solve problem together and finally we put everything into a complete project and it was done very successfully.
 
 ## **Career plan for 5 years**
 
-I plan to become an experienced software engineer in next 5 years. I should be able to manage the tasks in my work, avoid making bugs or mistakes, understand the general logic of my group project(why we need this module, how we implement the functions)  
+I plan to become an experienced software engineer in next 5 years. I should be able to manage the tasks in my work, avoid making bugs or mistakes, understand the general logic of my group project(what is the demand, why we need this module, how we implement the functions)  
 If possible, I hope I can take part in designing our backend system, try to optimizing the efficiency to serve more requests. Designing work is quite important. Good designs and bad designs differ. For good designs, it can last for several year, running very efficiently.(TCP/UDP are good designs,decades ago, people use them and now we are using them ) For bad designs, maybe we need to revise it once a week which costs a lot of time and human resources.  
 Generally speaking I would like to become a experienced or expert developer or analyst in 5 years time.
 
@@ -54,4 +55,14 @@ Stubborn. If I am faced with a problem, I will keep on solving it even if it is 
 1. When I worked at MEITUAN as QA, I give out a new way to test an api under concurrency situation(idempotent).
    Previously if we want to test the concurrency compatibility, we used to generate a threadpool to send request via several threads. It is a little bit complicated since we need to new a threadpool. Then I read the doc about our testing frame(testng), Surprisingly, I find that we can just write an argument in the annotation to implement this. We no longer need to maintain a threadpool,the code get shorter,the logic is easy to understand. save the time of all of my colleagues. From then on, my colleagues started to use my approach.(too technique) Generally speaking, I found a new feature of our testing framework that nobody knows before and the feature can save us a lot of time and energy to do testing.
 
-2. I build a website for my mum to recite english words. My mun said she always forgot the english words learned last week. You can type english words in the website and it will be stored in the database. Users will be informed what he learned yesterday or in last week so it can help us to recite and review english words. Why I think it is an achievement is that my application is working in the real world and it is helpful to people. It's pretty meaningful. As a tech analyst, our duty is to build applications to serve our clients and bring convenient to people.
+2. I build a website for my mum to recite english words. My mun said she always forgot the english words learned last week. You can type english words in the website and it will be stored in the database. Users can click buttons to show what he learned yesterday or in last week so it can help us to recite and review english words. Why I think it is an achievement is that this application is built by myself and working in the real world and it is helpful to people. It's pretty meaningful. As a tech analyst, our duty is to build applications to serve our clients and bring convenient to people. I am glad to see that my application help my mum in her daily life. A strong sense of achievement.
+
+## what makes a good analyst?
+
+1. critical thinking. We will face different problems in working. We should evaluate the problem in different angles, think about it more comprehensively more deeply, analyze the pros and tradeoffs and finally find the optimal solution.
+1. keep learning. tech is developing so fast. be eager to new leading tech. maybe it cannot be applied in working immediately, sometimes when learning new skills, I come up with new ideas, new ideas are always welcomed and it will usually lead to progress
+1. passion and happiness. Enjoy my work.
+
+## 会接受 offer 吗？
+
+So far I dont have any offer. If you give, 1st. I will appreciate it and definitely accept the offer. No one can reject such a big name comapny. If I get the opportunity to join you, I will not take other companies into consideration.
