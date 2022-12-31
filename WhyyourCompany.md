@@ -10,32 +10,37 @@
 
 # MSHF Tech Analyst
 
-**what do you know about our company?**  
-MSHF: joint venture company.(MS & Huaxin Securities), asset management service, Fund product(20-30 billions)  
-MS: one of the most famous company. Investment banking, consulting, asset manage, trading. **Values(do the right thing, put client first, lead with exceptional ideas, commit to diversity and inclusion, give back)**
+**what do you know about our company?**
 
-**why this job**  
- MS famous. First job. Choose big name company. New grad can Receive training so I can have a solid foundation working in financial industry. Big platform to show my ability.  
-One value that is encouraged by MS. Do the right thing. Recognize and strongly agree with that. If not in the right way, no matter how hard, never reach the target.
+1. MSHF: joint venture company.(MS & Huaxin Securities), asset management service, Fund product(20-30 billions)
+2. MS: one of the most famous company. Investment banking, consulting, asset manage, trading. **Values(do the right thing, put client first, lead with exceptional ideas, commit to diversity and inclusion, give back)**
+
+**why this job**
+
+1. MS famous. First job. Choose big name company. New grad can Receive training so I can have a solid foundation working in financial industry. Big platform to show my ability.
+1. One value that is encouraged by MS. Do the right thing. Recognize and strongly agree with that. If not in the right way, no matter how hard, never reach the target.
+
 **why financial industry**
-Financial industry, stock market. Fin&Eco important to most people. Increase wealth.
+
+1.Financial industry, stock market. Fin&Eco important to most people. Increase wealth.
 My work can really help&influence a lot of people, give me achievement.
 Financial markets and economy will gradually grow prosperous.
 
-**这个岗位可能要干什么**  
- Internal system, develop tools&app for non-technical colleagues to improve work efficiency. Maintain reliability database, network, cloud services, internal software, low latency computing and trading system, data analysis help trading and risk controlling, modeling and AI,
+**这个岗位可能要干什么**
 
-External system, web/mobile app for customers. Conveniently manage asset, help them increase wealth.
+1. Internal system, develop tools&app for non-technical colleagues to improve work efficiency. Maintain reliability database, network, cloud services, internal software, low latency computing and trading system, data analysis help trading and risk controlling, modeling and AI
+2. External system, web/mobile app for customers. Conveniently manage asset, help them increase wealth.
 
 **why do we hire you**
 
 1.  experience in software building from internships, quick to learn the leading tech and get used to the working env.
 2.  recognize the value of the company(especially about do the right thing and put client first).
 
-**any question?**  
-will I join application develop group if I given the offer?
-base?
-example about the application that you are doing.
+**any question?**
+
+1. will I join application develop group if I given the offer?
+1. base?
+1. example about the application that you are doing.
 
 # DNB technical trainee
 
