@@ -29,6 +29,26 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 1. 实现接口 ApplicationContextAware
 1. 通过 Spring 提供的 ContextLoader
 
+## bean 生命周期(5.x)
+
+生产:
+
+1. 加载 bean 定义，放在 beanDefinitionMap 中
+2. 根据 map 调用 createBean
+
+   1. 构造对象(createBeanInstance)，通过 bean class 属性找构造函数(如果有多个，优先拿 autowired 的，无法判断就报错) / 到单例池中找 bean 作为构造参数
+   2. 填充属性(populateBean)，三级缓存
+   3. 初始化实例
+   4. 注册销毁，注册上述的 bean 就可以在销毁时执行 destroy
+
+3. 放入单例池
+
+使用  
+销毁
+
+1. 先执行前处理器执行所有@predestroy 方法
+2. 调用 destroy 销毁 bean
+
 ### 依赖注入
 
 实现方法分为构造器注入和 setter 注入
