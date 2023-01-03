@@ -36,8 +36,8 @@ int a[] = new int[10];//初始化为0
 ## 访问修饰符
 
 public: 任何  
-protected: 包内相当于 public，包外只能被继承的类访问
-private: 类外不能访问，即使被继承也不能
+protected: 包内相当于 public，包外只能被继承的类访问  
+private: 类外不能访问，即使被继承也不能  
 package: 在包内可访问，在包外不可访问，不写默认是 package
 
 ## upcasting(子类转父类)/downcasting(父类转子类)
