@@ -15,6 +15,9 @@ Meituan:
 New feature: Timetable panel. Customers book a seat in a restaurant. Owner can see customer information on the timetable panel. (9:00 am several customers). If all seats are booked, customers can no longer book a seat at that time.
 Several cases(no customers, several customers book the same time, several customers book different time. No seats to book).
 
+Chaos engineering:
+test whether our system can survive when some chaos happened. Write testing code. Create chaos, set up the configuration in Monkey. We write code, inject the chaos, test, recover. Check the result.(db failure, return an empty obj instead of throwing a error)
+
 CTrip:  
 New Feature: Add a Boolean field called useServicePackage to the simple refund apply interface. (Servicepackage is something similar to coupon.) If the value is true, we will refund more money if the customer has some coupons. In db, add a field in a table. When implementing this feature, first write the value into db, then if use, call another api to get how many coupons a customer has and the amount of the coupons. Calculate sum of the coupon amount and finally call function to proceed the refund.(fee calculation, validation, payment, generate a receipt or invoice)
 
@@ -64,6 +67,12 @@ Stubborn. If I am faced with a problem, I will keep on solving it even if it is 
 1. critical thinking. We will face different problems in working. We should think about the problem in different angles, more comprehensively more deeply. We should not restrict our thinking. For example, we can analyze the pros and tradeoffs and finally find the optimal solution.
 1. keep learning and be eager to new tech. Although we can never learn everything and maybe it cannot be applied in working immediately, sometimes when learning new skills, I come up with new ideas, creativity and new ideas are always welcomed and it will usually lead to progress. So Learning and obtaining new ideas are important.
 1. passion and happiness. Love job. Love what we are doing. Enjoy my work. we are not robots. we are human beings full of emotions.
+
+## 测试还是开发？
+
+developer
+testing is part of the duty as a developer.
+Directly take part in building software. Although it is challenging, but it is inspiring as well. Glad to see my application can work well in the real world and bring convenience to people.
 
 ## 会接受 offer 吗？
 
