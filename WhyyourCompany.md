@@ -15,10 +15,14 @@
 1. MSHF: joint venture company.(MS & Huaxin Securities), asset management service, Fund product(20-30 billions)
 2. MS: one of the most famous company. Investment banking, consulting, asset manage, trading. **Values(do the right thing, put client first, lead with exceptional ideas, commit to diversity and inclusion, give back)**
 
-**why this job**
+**why MS**
 
-1. MS famous. First job. Choose big name company. New grad can Receive training so I can have a solid foundation working in financial industry. Big platform to show my ability.
-1. One value that is encouraged by MS. Do the right thing. Recognize and strongly agree with that. If not in the right way, no matter how hard, never reach the target.
+1. MS famous. First job. Choose big name company. In a big company, I can learn a lot as a new grad in tech or other areas, which will be helpful to my entire career. Big platform to show my ability, get challenged and make progress.
+1. One value that is encouraged by MS. Do the right thing. Recognize and strongly agree with that. It is the most critical principle in working. If not in the right way, no matter how hard, never reach the target.
+
+**why this position**
+Tech is becoming more and more important in every aspect of the world, especially IT. IT helped me a lot in my study life. I would like to develop softwares that can bring convenience to people all over the world.
+I like solving problems and I like making the idea into reality. Working as a tech, our duty is to solve digital problems and bring the original idea into reality with the help of tech. I enjoy the procedure.
 
 **why financial industry**
 
@@ -31,8 +35,13 @@
 
 **why do we hire you**
 
-1.  experience in software building from internships, quick to learn the leading tech and get used to the working env.
+1.  experience in software building from internships, easily getting used to the work as a analyst. quick to learn the leading tech and build a demo following the tutorial. For new grad, the ability to learn something new is important.
 2.  recognize the value of the company(especially about do the right thing and put client first).
+
+**why not internet industry like MT**
+
+1. working environment is a little strange. People are working like mercenaries. Some people are not willing to take the responsibility. Sometimes there are malign competition among colleagues.
+2. as a new grad, I hope I can get some training from the company to help me start my career. The company doesnot provide enough training to freshman.
 
 **any question?**
 

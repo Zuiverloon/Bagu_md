@@ -31,7 +31,7 @@ Have no idea how to begin.
 Firstly I went over everything on the book make sure I understand all.  
 Turn to github to find some examples.  
 After seeing several examples, I find there are some features in common. Different people follows the same pattern to build their own compiler. Lexical analysis -> grammar analysis -> generate intermidiate code -> execute instructions one by one.  
-I followed this pattern and build every component one by one. When you get the idea, coding is always the easy part. Finally it works.
+I turn to an example, imitate the example and followed this pattern and build every component one by one. When you get the idea, coding is always the easy part. Finally it works.
 
 ## **work on a team/make difficult decision**
 
@@ -39,15 +39,16 @@ undergrad, work with my roommate to build an online website as our course projec
 
 ## **Career plan for 5 years**
 
-I plan to become an experienced software engineer in next 5 years. I should be able to manage the tasks in my work, avoid making bugs or mistakes, understand the general logic of my group project(what is the demand, why we need this module, how we implement the functions)  
+I plan to become an experienced software engineer in next 5 years, still working in tech area because I like tech. I should be able to manage the tasks in my work, avoid making bugs or mistakes, understand the general logic of my group project(what is the demand, why we need this module, how we implement the functions)  
 If possible, I hope I can take part in designing our backend system, try to optimizing the efficiency to serve more requests. Designing work is quite important. Good designs and bad designs differ. For good designs, it can last for several year, running very efficiently.(TCP/UDP are good designs,decades ago, people use them and now we are using them ) For bad designs, maybe we need to revise it once a week which costs a lot of time and human resources.  
 Generally speaking I would like to become a experienced or expert developer or analyst in 5 years time.
 
 ## **strength && weakness**
 
-Patient. It is very common that we don’t understand something when we first meet it. If I am still in confusion, I will try to think about it once more and read documentations once again. Never give up halfway. If possible, I will raise some questions about it. I never get impatient or angry if met with problems. It’s good to learn something new.  
-Brave to raise questions. Maybe a lot of people are scared of raising questions but I am always brave to raise questions. Once someone answer my questions, it is likely for me to get new ideas from their word and I will no longer being bothered by the problem. Raising questions is an effective and efficient way to solve the problem. Turning to someone for help I think is always more efficient than solving the problem by myself.
+Patient. It is very common that we don’t understand something when we first meet it. If I am still in confusion, I will try to think about it once more and read documentations once again. Never give up halfway. Everytime I read the book twice, I understand more about what I have read. If possible, I will raise some questions about it. I never get impatient or angry if met with problems. It’s good to learn something new.  
+Brave to raise questions. Maybe a lot of people are scared of raising questions but I am always brave to raise questions. All of our colleagues are experienced. Once someone answer my questions, it is likely for me to get new ideas from their word and I will no longer being bothered by the problem. Raising questions is an effective and efficient way to solve the problem. Turning to someone for help I think is always more efficient than solving the problem by myself.
 
+WEAK  
 Stubborn. If I am faced with a problem, I will keep on solving it even if it is lunch time, even if I have spent a lot of time on it. I seldom leave the problem aside. Admittedly, it’s not very efficient. Maybe sometimes I should be more farseeing. If I spend too much time on a single problem, I should temporarily switch to another task and after I finish another task, I go back to fix this problem.
 
 ## Best achievement
@@ -55,13 +56,13 @@ Stubborn. If I am faced with a problem, I will keep on solving it even if it is 
 1. When I worked at MEITUAN as QA, I give out a new way to test an api under concurrency situation(idempotent).
    Previously if we want to test the concurrency compatibility, we used to generate a threadpool to send request via several threads. It is a little bit complicated since we need to new a threadpool. Then I read the doc about our testing frame(testng), Surprisingly, I find that we can just write an argument in the annotation to implement this. We no longer need to maintain a threadpool,the code get shorter,the logic is easy to understand. save the time of all of my colleagues. From then on, my colleagues started to use my approach.(too technique) Generally speaking, I found a new feature of our testing framework that nobody knows before and the feature can save us a lot of time and energy to do testing.
 
-2. I build a website for my mum to recite english words. My mun said she always forgot the english words learned last week. You can type english words in the website and it will be stored in the database. Users can click buttons to show what he learned yesterday or in last week so it can help us to recite and review english words. Why I think it is an achievement is that this application is built by myself and working in the real world and it is helpful to people. It's pretty meaningful. As a tech analyst, our duty is to build applications to serve our clients and bring convenient to people. I am glad to see that my application help my mum in her daily life. A strong sense of achievement.
+2. I build a software with both frontend webpage and backend database for my mum to recite english words. My mum said she always forgot the english words learned last week. So I develop the software to solve this problem for her. The general idea is that We can type english words in the website and it will be stored in the database. Users can click buttons to show what he learned yesterday or in last week so it can help us to recite and review english words. Why I think it is an achievement is that this application is built by myself and working in the real world and it is helpful to people. It's pretty meaningful. As a tech analyst, our duty is to build applications to serve our clients and bring convenience to people. I am glad to see that my application help my mum in her daily life. A strong sense of achievement.
 
 ## what makes a good analyst?
 
-1. critical thinking. We will face different problems in working. We should evaluate the problem in different angles, think about it more comprehensively more deeply, analyze the pros and tradeoffs and finally find the optimal solution.
-1. keep learning. tech is developing so fast. be eager to new leading tech. maybe it cannot be applied in working immediately, sometimes when learning new skills, I come up with new ideas, new ideas are always welcomed and it will usually lead to progress
-1. passion and happiness. Enjoy my work.
+1. critical thinking. We will face different problems in working. We should think about the problem in different angles, more comprehensively more deeply. We should not restrict our thinking. For example, we can analyze the pros and tradeoffs and finally find the optimal solution.
+1. keep learning and be eager to new tech. Although we can never learn everything and maybe it cannot be applied in working immediately, sometimes when learning new skills, I come up with new ideas, creativity and new ideas are always welcomed and it will usually lead to progress. So Learning and obtaining new ideas are important.
+1. passion and happiness. Love job. Love what we are doing. Enjoy my work. we are not robots. we are human beings full of emotions.
 
 ## 会接受 offer 吗？
 
