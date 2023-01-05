@@ -108,8 +108,102 @@ TreeMap:也是存键值对，红黑树，排序遍历较快
 
 ## 设计模式
 
-工厂模式：传递类型信息获取不同类的对象  
-单例模式：一个类仅有一个实例对象，提供一个访问他的 getinstance 方法，类中有一个 static 实例
+**工厂模式**：传递类型信息获取不同类的对象
+
+```java
+public class ShapeFactory {
+
+   //使用 getShape 方法获取形状类型的对象
+   public Shape getShape(String shapeType){
+      if(shapeType == null){
+         return null;
+      }
+      if(shapeType.equalsIgnoreCase("CIRCLE")){
+         return new Circle();
+      } else if(shapeType.equalsIgnoreCase("RECTANGLE")){
+         return new Rectangle();
+      } else if(shapeType.equalsIgnoreCase("SQUARE")){
+         return new Square();
+      }
+      return null;
+   }
+}
+```
+
+**单例模式**：一个类仅有一个实例对象，提供一个访问他的 getinstance 方法，类中有一个 static 实例
+
+```java
+public class SingleObject {
+
+   //创建 SingleObject 的一个对象
+   private static SingleObject instance = new SingleObject();
+
+   //让构造函数为 private，这样该类就不会被实例化
+   private SingleObject(){}
+
+   //获取唯一可用的对象
+   public static SingleObject getInstance(){
+      return instance;
+   }//如果是懒汉式，可以这里再初始化一个新实例，并且用synchronized保证并发
+
+}
+```
+
+**代理模式**：创建现有对象的代理类，向外界提供接口（可解决远程代理问题，需要的对象在远程，在本地通过代理访问）
+
+```java
+public interface Image {
+   void display();
+}
+public class RealImage implements Image {
+
+   private String fileName;
+
+   public RealImage(String fileName){
+      this.fileName = fileName;
+      loadFromDisk(fileName);
+   }
+
+   @Override
+   public void display() {
+      System.out.println("Displaying " + fileName);
+   }
+
+   private void loadFromDisk(String fileName){
+      System.out.println("Loading " + fileName);
+   }
+}
+public class ProxyImage implements Image{
+
+   private RealImage realImage;
+   private String fileName;
+
+   public ProxyImage(String fileName){
+      this.fileName = fileName;
+   }
+
+   @Override
+   public void display() {
+      if(realImage == null){
+         realImage = new RealImage(fileName);
+      }
+      realImage.display();
+   }
+}
+```
+
+## java 反射机制
+
+在运行状态中，对任意一个类，都可以知道类的所有属性和方法，动态获取对象/调用方法
+
+```java
+Class clazz = Class.forName("...");//获取类
+clazz.getDeclaredConstructor();//获取构造函数
+clazz.getField();//获取变量
+clazz.getMethod;//获取方法
+clazz.set(Object,value);//设置变量的属性
+clazz.invoke(Object,args);//调用方法
+```
 
 ## 线程
 
