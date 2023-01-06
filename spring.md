@@ -75,6 +75,8 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 
 @Before @After 注解，统称为 advice
 
+实现机制为 java 代理，生成了代理类
+
 ## 事务
 
 Spring 不直接管理事务，通过事务管理器来管理。最底层接口为 transactionManager，包括 commit 和 rollback 方法。 可以通过注释@Transactional 或通过 xml 实现声明式的事物。(不要忘了配置 xml 里面的 datasource 如 jdbc 和事务管理器)
