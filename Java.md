@@ -131,6 +131,8 @@ public class ShapeFactory {
 ```
 
 **单例模式**：一个类仅有一个实例对象，提供一个访问他的 getinstance 方法，类中有一个 static 实例
+懒汉：第一次获取时创建实例
+饿汉：成员变量创建实例
 
 ```java
 public class SingleObject {
