@@ -38,7 +38,7 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 
    1. 构造对象(createBeanInstance)，通过 bean class 属性找构造函数(如果有多个，优先拿 autowired 的，无法判断就报错) / 到单例池中找 bean 作为构造参数
    2. 填充属性(populateBean)，三级缓存
-   3. 初始化实例
+   3. 初始化实例(initializeBean)
    4. 注册销毁，注册上述的 bean 就可以在销毁时执行 destroy
 
 3. 放入单例池
@@ -47,7 +47,7 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 销毁
 
 1. 先执行前处理器执行所有@predestroy 方法
-2. 调用 destroy 销毁 bean
+2. 调用 destroyBeans 销毁 bean
 
 ### 依赖注入
 
@@ -56,6 +56,11 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 ### 循环依赖
 
 如果相互依赖的两个类都是构造器注入，则无法解决抛出异常，要改为其中一个 setter 注入，其中一个先初始化，再实例化
+
+### 循环依赖 三级缓存
+
+一级缓存：初始化完的 bean 可用的 bean 放在一级缓存中
+二级缓存，三级缓存：如果在初始化的时候如果需要别的 bean，先去一级缓存中找，找不到或者对象正在创建中，就去二级缓存中找，二级找不到就去三级找，三级找到了移入二级。二级里面放的是未填充属性的 bean，三级放的是 bean 工厂。加入三级缓存的前提是执行了构造器，所以如果是构造器注入的循环，无法解决。
 
 ### lazy initialize bean
 
@@ -71,11 +76,12 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 
 ## AOP
 
-业务无关的代码与业务接耦，如打日志操作，校验参数(Before+传参)可以不写在方法中而是通过 AOP 实现
+对已有的属性，方法做增强(advice)，业务无关的代码与业务接耦。通过切面的方式调用代码（统一的，在方法执行前(前后叫做 joinpoint，被增强的规则叫做切点)做一系列操作，在方法执行后做一系列操作）如打日志操作，校验参数(Before+传参)，鉴权，可以不写在方法中而是通过 AOP 实现
 
 @Before @After 注解，统称为 advice
 
 实现机制为 java 代理，生成了代理类
+aop 是动态代理，详见 java 动态代理部分
 
 ## 事务
 
@@ -156,3 +162,15 @@ txManager.commit(status);
 
 1. 在代码中把异常捕获了，导致事务管理器没有捕获到异常
 2. 抛错了异常
+
+## spring 和 springboot 的区别
+
+spring:
+
+1. 最重要功能是 DI
+2. 跑 spring 应用需要设置服务器
+
+springboot(基于 spring，一般用来当 restapi 后端):
+
+1. 最重要的功能是自动配置
+2. 自带内嵌的 tomcat 和 netty
