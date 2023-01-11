@@ -29,6 +29,18 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 1. 实现接口 ApplicationContextAware
 1. 通过 Spring 提供的 ContextLoader
 
+## beanfactory vs factorybean
+
+**beanfactory**:spring IOC 容器的根接口，可以实例化 bean，建立依赖等
+**factorybean**：用来自定义一个 bean 的实例化过程。spring 中有两种 bean，一种是普通 bean，一种是工厂 bean。工厂 bean 可以用来生成 bean，会向容器中注入两个 bean(一个本身，一个 getObject 返回的 bean)。当调用 getbean 获取工厂 bean 时，返回的是工厂产生的 bean，如果要获取工厂 bean 本身，要加一个&号如"&customFactoryBean"
+
+## spring 容器启动
+
+1. 扫描读取所有 bean 配置信息，放到 bean 定义 map 中
+2. 实例化 bean
+3. 将 bean 放入容器
+4. 运行时获取 bean
+
 ## bean 生命周期(5.x)
 
 生产:
