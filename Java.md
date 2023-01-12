@@ -52,11 +52,28 @@ Child c = (Child)p;//downcasting
 ## 多态 polymorphism
 
 运行期间才确定对象的类型  
-优点：对于子类对象都可以用父类变量去管理，多个不同子类的对象可以存在同一个父类数组中
+优点：对于子类对象都可以用父类变量去管理，多个不同子类的对象可以存在同一个父类数组中/提高扩展性，降低耦合
 
-## 模版
+## 泛型
 
-类型参数化，编译时确定类型（在字节码层面的本质是使用了 Object 类，如果加了限制类如 Number，那就是限制类）
+类型参数化，编译时确定类型（在字节码层面的本质是使用了 Object 类，如果加了限制类如 Number，那就是限制类）  
+PECS 原则：往外读的用上界 extends，往里插入的用下界 super
+
+```java
+
+//上界<? extends T>不能往里存，只能往外取，取出来的对象只能放在基类中
+List<? extends Fruit> p = new ArrayList<Apple>(new Apple());
+p.add(new Fruit());// NO!
+p.add(new Apple());// NO!
+
+Fruit a = p.get(0);//只能放在基类中
+
+//下界<? super T>能往里存，但是取的时候必须放在Object对象中
+List<? super Fruit> p = new ArrayList<Fruit>(new Fruit());
+p.add(new Apple());// OK
+Apple a = p.get(0);// NO!
+Object o = p.get(0);//OK
+```
 
 ## 抽象类
 
@@ -101,6 +118,11 @@ HashMap:1.8 以前是数组(桶)+链表，1.8 以后是数组+红黑树，默认
 HashTable:类似于 hashmap，不支持 null 为 key 且线程安全(synchronized)  
 Con:volatile 关键词(操作后会被别的线程立即看见)，可以并行操作不同的 bucket，如果是同一个 bucket 就加锁控制  
 TreeMap:也是存键值对，红黑树，排序遍历较快
+
+## 锁
+
+synchronized：不可中断，不可公平锁
+reentrant：可中断(lockinterrupt 方法可响应中断)，可公平(公平的话会看队列中是否有其他线程)
 
 ## 死锁
 
@@ -358,3 +380,13 @@ Callable 返回 future，且若有异常在 Future.get()时会抛出异常，通
 
 1. execute 方法提交不需要返回值的任务，无法判断是否执行完成
 2. submit 方法提交需要返回值的任务，返回一个 Future 对象，通过 Future.get 来判断是否执行完成(get 会阻塞直到执行完成)
+
+## 垃圾回收
+
+**如何 dereference**：把引用记为 null，把引用指向另一个对象，匿名变量(new String();)  
+**垃圾回收 3 阶段**：标记对象(引用计数，可达性分析)、清除垃圾对象，压缩内存  
+**引用计数**：统计指向对象的引用个数，弊端：需要额外空间记录，无法解决循环引用  
+**可达性分析**：从 gc root(堆外指向堆内的引用，如局部变量，已加载类的静态变量) 开始，能访问的都标记为可达，问题：多线程环境下，已访问过的对象可能被其他线程修改  
+在新生代触发的是 minor GC，在老年代触发的是 major GC  
+新生代包括 eden space 和 s1，s2。eden 中都是新的对象，经过一次 gc（eden 空间满了会触发 minor gc） 后把 eden 和(s1/s2)存活的放入(s2/s1),保证 s1 和 s2 至少有一个是空的。当经过了一定次数后还存活的，就放入老年代。  
+永久代：存放类方法。类不再被使用了。（为解决内存不够的问题，jkd8 开始永久代被替换成 metaspace，当空间满可以自动清理垃圾）
