@@ -8,6 +8,24 @@
  **any question?**
  -->
 
+# Barclays
+
+**what do you know about our company?**  
+famous. credit cards & loans & digital services.  
+**why this job**  
+Tech is becoming more and more important in every aspect of the world, especially IT. IT helped me a lot in my study life. I would like to develop softwares that can bring convenience to people all over the world.
+I like solving problems and I like making the idea into reality. Working as a tech, our duty is to solve digital problems and bring the original idea into reality with the help of tech. I enjoy the procedure.
+
+**这个岗位可能要干什么**
+
+1. Internal system, develop tools&app for non-technical colleagues to improve work efficiency. Maintain reliability database, network, cloud services, internal software, low latency computing and trading system, data analysis help trading and risk controlling, modeling and AI
+2. External system, web/mobile app for customers. Conveniently manage asset, help them increase wealth.  
+   **why do we hire you**
+3. experience in software building from internships, easily getting used to the work as a analyst. quick to learn the leading tech and build a demo following the tutorial. For new grad, the ability to learn something new is important.
+4. recognize the value of the company(service. deliver services that are welcomed by people).
+
+**any question?**
+
 # MSHF Tech Analyst
 
 **what do you know about our company?**
