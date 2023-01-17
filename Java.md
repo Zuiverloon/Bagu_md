@@ -52,7 +52,11 @@ Child c = (Child)p;//downcasting
 ## 多态 polymorphism
 
 运行期间才确定对象的类型  
-优点：对于子类对象都可以用父类变量去管理，多个不同子类的对象可以存在同一个父类数组中/提高扩展性，降低耦合
+优点：
+
+1. 对于子类对象都可以用父类变量去管理，多个不同子类的对象可以存在同一个父类数组中
+2. 可扩展性
+3. 降低耦合
 
 ## 泛型
 
@@ -121,8 +125,8 @@ TreeMap:也是存键值对，红黑树，排序遍历较快
 
 ## 锁
 
-synchronized：不可中断，不可公平锁
-reentrant：可中断(lockinterrupt 方法可响应中断)，可公平(公平的话会看队列中是否有其他线程)
+synchronized：关键字，不可中断，非公平锁  
+reentrant：类，调用 lock，unlock 实现加锁与释放可中断(lockinterrupt()方法可响应中断)，可公平(公平的话会看队列中是否有其他线程)
 
 ## 死锁
 
@@ -231,6 +235,7 @@ clazz.invoke(Object,args);//调用方法
 
 **动态代理**
 每一个动态代理类的调用处理程序都必须实现 InvocationHandler 接口,通过 Proxy 类创建代理对象
+流程：将真实对象传入一个实现了 invocationhandler 接口的 handler 类中，从 handler 类中获得一个代理对象
 
 ```java
 public class Teacher implements People{
