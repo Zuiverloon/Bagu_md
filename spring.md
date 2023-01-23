@@ -31,7 +31,7 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 
 ## beanfactory vs factorybean
 
-**beanfactory**:spring IOC 容器的根接口，可以实例化 bean，建立依赖等
+**beanfactory**:spring IOC 容器的根接口，可以实例化 bean，建立依赖等  
 **factorybean**：用来自定义一个 bean 的实例化过程。spring 中有两种 bean，一种是普通 bean，一种是工厂 bean。工厂 bean 可以用来生成 bean，会向容器中注入两个 bean(一个本身，一个 getObject 返回的 bean)。当调用 getbean 获取工厂 bean 时，返回的是工厂产生的 bean，如果要获取工厂 bean 本身，要加一个&号如"&customFactoryBean"
 
 ## spring 容器启动
@@ -71,7 +71,7 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 
 ### 循环依赖 三级缓存
 
-一级缓存：初始化完的 bean 可用的 bean 放在一级缓存中
+一级缓存：初始化完的 bean 可用的 bean 放在一级缓存中  
 二级缓存，三级缓存：如果在初始化的时候如果需要别的 bean，先去一级缓存中找，找不到或者对象正在创建中，就去二级缓存中找，二级找不到就去三级找，三级找到了移入二级。二级里面放的是未填充属性的 bean，三级放的是 bean 工厂。加入三级缓存的前提是执行了构造器，所以如果是构造器注入的循环，无法解决。
 
 ### lazy initialize bean
@@ -86,7 +86,7 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 4. session 一个 http session 请求一个  
    如何指定？xml 或注解@Scope 指定
 
-## AOP
+## AOP(面向切面编程)
 
 对已有的属性，方法做增强(advice)，业务无关的代码与业务接耦。通过切面的方式调用代码（统一的，在方法执行前(前后叫做 joinpoint，被增强的规则叫做切点)做一系列操作，在方法执行后做一系列操作）如打日志操作，校验参数(Before+传参)，鉴权，可以不写在方法中而是通过 AOP 实现
 
