@@ -49,58 +49,130 @@ Step3 - Now, compare the key with all elements in the sorted array.
 Step 4 - If the element in the sorted array is smaller than the current element, then move to the next element. Else, shift greater elements in the array towards the right.  
 Step 5 - Insert the value.
 
+```java
+public static void insertionsort(int[] arr){
+        for (int i = 1;i<arr.length;i++){
+            int key = arr[i];
+            for (int j = i-1;j>=0;j--){
+                if (arr[j]>key){
+                    arr[j+1] = arr[j];
+                    arr[j] = key;
+                }
+                else{
+                    break;
+                }
+            }
+        }
+        return;
+    }
+```
+
 ### **selection sort O(n2)**
 
 firstly, go thought all elements to see the smallest element, then swap it with the first element  
 then, go through all element from the second to the end to see the second smallest element, then swap
 
+```java
+public static void selectionsort(int[] arr){
+        for (int i = 0;i<arr.length;i++){
+            int minIndex = i;
+            int minValue = arr[i];
+            for (int j = i+1;j<arr.length;j++){
+                if (arr[j]<minValue){
+                    minValue = arr[j];
+                    minIndex = j;
+                }
+            }
+            int t = arr[i];
+            arr[i] = arr[minIndex];
+            arr[minIndex] = t;
+        }
+        return;
+    }
+```
+
 ### **bubble sort O(n2)**
 
 compare the neighbour elements to see whether they need to swap.
+
+```java
+public static void bubblesort(int[] arr){
+        for (int i = 0;i<arr.length-1;i++){
+            for (int j = arr.length-1;j>i;j--){
+                if (arr[j]<arr[j-1]){
+                    int t = arr[j];
+                    arr[j] = arr[j-1];
+                    arr[j-1] = t;
+                }
+            }
+        }
+        return;
+    }
+```
 
 ### **quicksort O(nlogn)**
 
 选出一个 pivot value, put elements smaller than pivot to the left side, put elements greater than pivot value to the right side, recursively do sort on the left side and the right side.
 
-```c++
-void quicksort(int* arr,int l,int r){
-    int pivot = a[l];
-    int i = l,j = r;
-    if (i<r){
-        while (i<j){
-            while (i<=j && t<a[j]){
-                j--;
+```java
+public static void quicksort(int[] arr,int left,int right){
+        if (left>=arr.length || left<0 || right>=arr.length || right<0) return;
+        int pivot = arr[left];
+        int l = left,r = right;
+        if(l<r){
+            while (l<r) {
+                while (l < r && arr[r] > pivot) r--;
+                if (r > l) {
+                    arr[l] = arr[r];l++;
+                }
+                while (l < r && arr[l] < pivot) l++;
+                if (r > l) {
+                    arr[r] = arr[l];r--;
+                }
             }
-            if (i<j) a[i++] = a[j];
-            while (i<=j && t>a[i]){
-                i++;
-            }
-            if (i<j) a[j--] = a[i];
+            arr[l] = pivot;
+            quicksort(arr,left,l-1);
+            quicksort(arr,l+1,right);
         }
-        a[i] = t;
-        quicksort(arr,l,i-1);
-        quicksort(arr,i+1,r);
     }
-}
 ```
 
 ### **merge sort O(nlogn)**
 
 (分治法)divide the given list into 2 halves, sort the 2 halves and merge them together, recursively
 
-```c++
-sort(int* arr,int left,int right){
-    if (left<right){
-        int mid = (left+right)/2;
-        sort(arr,left,mid);
-        sort(arr,mid,right);
-        merge(arr,left,mid,right);
+```java
+public static void merge(int[] arr,int low, int mid,int high,int[] tmp){
+        int j = low,k = mid+1;
+        int tmpp = 0;
+        while (j<=mid && k<=high){
+            if (arr[j]<arr[k]){
+                tmp[tmpp++] = arr[j++];
+            }
+            else{
+                tmp[tmpp++] = arr[k++];
+            }
+        }
+        while (j<=mid){
+            tmp[tmpp++] = arr[j++];
+        }
+        while (k<=high){
+            tmp[tmpp++] = arr[k++];
+        }
+        for (int i = 0;i<tmpp;i++){
+            arr[low+i] = tmp[i];
+        }
+        return;
     }
-}
 
-merge(int* arr,int l,int m,int r){
-    ...
-}
+    public static void mergesort(int[] arr,int low,int high,int[] tmp){
+        if (low<high){
+            int mid = (low+high)/2;
+            mergesort(arr,low,mid,tmp);
+            mergesort(arr,mid+1,high,tmp);
+            merge(arr,low,mid,high,tmp);
+        }
+    }
 ```
 
 ### **heapsort O(nlogn)**
@@ -109,26 +181,35 @@ heap 堆: 节点的值不比左子节点小，也不必右子节点小
 make a heap to get the top value
 recursively find the top in each loop
 
-```c++
-//make initial heap
-for(int i = N/2;i>=0;i--){
-    heapify(arr,i,N);
-}
-//heapify
-void heapify(int* arr,int i,int N){
-    int j;int t;
-    while (i*2+1<n){
-        j = i*2+1;
-        t = nums[i];
-        if (j<n-1 && nums[j]<nums[j+1])j++;// find the greater element
-        if (t<nums[j]){// whether we need to swap
-            nums[i] = nums[j];
-            nums[j] = t;
-            i = j;//move to the next layer
+```java
+public static void heapsort(int[] arr){
+        for (int i = arr.length/2;i>=0;i--){
+            heapify(arr,i,arr.length-1);
         }
-        else break;
+        for (int i = 0;i<arr.length;i++){
+            int curMax = arr[0];
+            arr[0] = arr[arr.length-1-i];
+            arr[arr.length-1-i] = curMax;
+            heapify(arr,0,arr.length-2-i);
+        }
     }
-}
+
+    public static void heapify(int[] arr,int i,int right){
+        // make a max heap. arr[i] should be greater than arr[i*2](if existed) and arr[i*2+1](if existed)
+        while (i*2<=right){ // make sure that node i has children
+            int t = i*2;// t is the index of the greater children
+            if (t+1<=right && arr[t]<arr[t+1]){ // has two children
+                t++;
+            }
+            if (arr[i]<arr[t]){ // if children is greater, than swap
+                int tmp = arr[i];
+                arr[i] = arr[t];
+                arr[t] = tmp;
+                i = t;// do it recursively/ move to next layer
+            }
+            else return;
+        }
+    }
 ```
 
 ## tree
