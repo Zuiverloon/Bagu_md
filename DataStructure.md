@@ -319,3 +319,7 @@ for (int p = 1; p <= n; p++) {
     }
 }
 ```
+
+## LRU cache
+
+双向链表+hash 表：https://leetcode.cn/problems/lru-cache-lcci/
