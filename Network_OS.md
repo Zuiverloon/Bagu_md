@@ -65,6 +65,12 @@ cpu 只能调度线程
 一个进程崩了，不影响其他进程  
 一个线程崩了，这个线程所在的进程就崩了
 
+| process                                                    | thread                                                                                 |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| any program in execution(at least one thread in a process) | a segment of a process,cpu only schedule thread                                        |
+| processes are isolated with each other                     | threads in one process share code,heap but they have independent stacks,PC,cpu context |
+| if one crash, others ok                                    | one crash, other threads in the same process crash                                     |
+
 ## 页面置换算法
 
 LRU：最近最久未使用。实现为 index 索引+双向链表  
