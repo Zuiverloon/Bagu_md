@@ -88,6 +88,7 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 
 ## AOP(面向切面编程)
 
+aspect oriented programming, we can add additional behavior to methods without modifying the body of the method. By @Before, @After. 通过动态代理实现(dynamic proxy)
 对已有的属性，方法做增强(advice)，业务无关的代码与业务接耦。通过切面的方式调用代码（统一的，在方法执行前(前后叫做 joinpoint，被增强的规则叫做切点)做一系列操作，在方法执行后做一系列操作）如打日志操作，校验参数(Before+传参)，鉴权，可以不写在方法中而是通过 AOP 实现
 
 @Before @After 注解，统称为 advice
