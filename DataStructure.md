@@ -266,6 +266,10 @@ public static void heapsort(int[] arr){
     }
 ```
 
+### 近似有序数列的排序，元素的移动距离不大于 k
+
+堆排序 堆的大小为 k
+
 ## tree
 
 节点(node) 父节点(parent node) 子节点(child node) 同胞节点(sibling node) 叶子节点(leaf node) 中间节点(internal node) 路径(path) 边(edge)
