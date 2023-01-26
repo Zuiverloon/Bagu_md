@@ -53,6 +53,46 @@ LinkedList: save elements in distributed space. Length not fixed. 查找 O(1)，
 八进制 octal  
 分治法 divide and conquer
 
+## kmp
+
+思想：当匹配失败时，找 pattern 串的相同前缀和后缀  
+abeababeabf  
+ ｜  
+abeabf 此时(a,f)失败，但有相同前缀后缀 ab，因此转变为  
+ababeabf  
+abeabf 此时(a,e)失败，没有相同前缀后缀，移动匹配串到  
+abeabf  
+abeabf
+
+```java
+public static int[] getkmpnext(String pattern){
+    int[] next = new int[pattern.length()];
+    char[] c = pattern.toCharArray();
+    next[0] = 0;//if the matching fails at i, then next[i] will be the next starting position(the suffix of the pattern is equal to the prefix of the pattern).
+    for (int i = 1,j = 0;i<c.length;i++){
+        while (j>0 && c[i]!=c[j])j = next[j-1];
+        if (c[i] == c[j]){
+            j++;
+        }
+        next[i] = j;
+    }
+    return next;
+}
+
+public static int kmp(String s,String pattern){
+    char[] sc = s.toCharArray();char[] pc = pattern.toCharArray();
+    int[] next = getkmpnext(pattern);
+    int n = s.length();
+    int m = pattern.length();
+    for (int i = 0,j = 0;i<n;i++){
+        while (j>0 && sc[i]!=pc[j])j = next[j-1];
+        if (sc[i] == pc[j])j++;
+        if (j == m)return i-m+1;
+    }
+    return -1;
+}
+```
+
 ## Sort
 
 ### **insertion sort O(n2)**
