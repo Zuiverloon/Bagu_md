@@ -27,7 +27,12 @@ a val field and a next field pointing to next node.
 LinearTable: allocate continuous memory for fixed length 查找 O(1)，增删 O(n)  
 LinkedList: save elements in distributed space. Length not fixed. 查找 O(1)，增删 O(n)  
 如果要频繁查找，且知道长度，用线性表
-要频繁插入，不知道长度，用单链表
+要频繁插入，不知道长度，用单链表  
+| linear table(array) |linkedlist|
+|---|---|
+|store element in continuous memory space for fixed length|store element in distributed space,length not fixed|
+|support random access|do not support. If want to find the element,need to iterate|
+|search O(1), modify O(n)|search O(n),modify O(n), but if given the previous node, then modify O(1)|
 
 ### 环形链表 circularLinkedList
 
