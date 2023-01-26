@@ -37,7 +37,16 @@ LinkedList: save elements in distributed space. Length not fixed. 查找 O(1)，
 
 ### 二分查找 binary search
 
-### 平方 the square of 立方 the cubic power of 四次方 the fourth power of 二进制 binary 十进制 decimal 十六进制 hexadecimal 八进制 octal 分治法 divide and conquer
+### 复杂度
+
+平方 the square of  
+立方 the cubic power of  
+四次方 the fourth power of  
+二进制 binary  
+十进制 decimal  
+十六进制 hexadecimal  
+八进制 octal  
+分治法 divide and conquer
 
 ## Sort
 
@@ -218,3 +227,46 @@ public static void heapsort(int[] arr){
 遍历(traverse)前序遍历(preorder,左，右，自己)、后序遍历(postorder，右，左，自己)、中序遍历(inorder 左，自己、右)、层次遍历(level order 非递归，依靠队列实现)
 二叉树(binary tree)  
 平衡二叉树 balanced tree:左右子树高度(gap between the length of the left and the right tree)在 1 和-1 之间
+
+## graph
+
+Floyd(find the shortest path between any node a to any node b) O(n3)
+
+```java
+// floyd 基本流程为三层循环：
+// 枚举中转点 - 枚举起点 - 枚举终点 - 松弛操作
+for (int p = 1; p <= n; p++) {
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            w[i][j] = Math.min(w[i][j], w[i][p] + w[p][j]);
+        }
+    }
+}
+```
+
+Dijkstra(find the shortest path between a specific node a to any node b)
+
+```java
+// dist[x] = y 代表从「源点/起点」到 x 的最短距离为 y
+int[] dist = new int[N];
+// 记录哪些点已经被更新过
+boolean[] vis = new boolean[N];
+Arrays.fill(vis, false);
+Arrays.fill(dist, INF);
+// 只有起点最短距离为 0
+dist[k] = 0;
+// 迭代 n 次
+for (int p = 1; p <= n; p++) {
+    // 每次找到「最短距离最小」且「未被更新」的点 t
+    int t = -1;
+    for (int i = 1; i <= n; i++) {
+        if (!vis[i] && (t == -1 || dist[i] < dist[t])) t = i;
+    }
+    // 标记点 t 为已更新
+    vis[t] = true;
+    // 用点 t 的「最小距离」更新其他点
+    for (int i = 1; i <= n; i++) {
+        dist[i] = Math.min(dist[i], dist[t] + w[t][i]);
+    }
+}
+```
