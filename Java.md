@@ -134,7 +134,8 @@ reentrant：类，调用 lock，unlock 实现加锁与释放可中断(lockinterr
 
 ## 设计模式
 
-**工厂模式**：传递类型信息获取不同类的对象
+**工厂模式**：传递类型信息获取不同子类的对象
+用于解耦(decoupling)
 
 ```java
 public class ShapeFactory {
@@ -159,6 +160,7 @@ public class ShapeFactory {
 **单例模式**：一个类仅有一个实例对象，提供一个访问他的 getinstance 方法，类中有一个 static 实例
 懒汉：第一次获取时创建实例
 饿汉：成员变量创建实例
+用于数据库连接 session
 
 ```java
 public class SingleObject {
@@ -171,6 +173,10 @@ public class SingleObject {
 
    //获取唯一可用的对象
    public static SingleObject getInstance(){
+    if (instance == null){
+        instance = new SingleObject();
+        return instance;
+    }
       return instance;
    }//如果是懒汉式，可以这里再初始化一个新实例，并且用synchronized保证并发
 
@@ -220,7 +226,7 @@ public class ProxyImage implements Image{
 }
 ```
 
-## java 反射机制
+## java 反射机制 reflection
 
 在运行状态中，对任意一个类，都可以知道类的所有属性和方法，动态获取对象/调用方法
 
