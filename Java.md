@@ -1,5 +1,9 @@
 # Java
 
+封装 encapsulation：把变量和方法绑在一起
+继承 inherit：inherit from base class
+多态 polymorphism：对于父类和自类，uses the same methods to perform different tasks
+
 ## 哪种 String 存在常量池，哪种存在堆
 
 ```java
@@ -51,12 +55,15 @@ Child c = (Child)p;//downcasting
 
 ## 多态 polymorphism
 
+对于父类和自类，uses the same methods to perform different tasks
 运行期间才确定对象的类型  
 优点：
 
 1. 对于子类对象都可以用父类变量去管理，多个不同子类的对象可以存在同一个父类数组中
 2. 可扩展性
-3. 降低耦合
+3. 降低耦合(左边是父类，右边是子类)
+
+需要显示重写父类方法
 
 ## 泛型
 
@@ -81,23 +88,24 @@ Object o = p.get(0);//OK
 
 ## 抽象类
 
-抽象类不能被实例化  
+抽象类不能被实例化(instantiated)  
 抽象类不一定包含抽象方法，也可以包含实现的方法，但若包含抽象方法的类了必须是抽象类  
 抽象方法只有声明没有实现  
 构造方法，类方法(static 修饰的)不能是抽象  
 子类必须实现抽象方法，除非子类是抽象类
 
-## 接口
+## 接口(抽象方法的集合)
 
-接口的方法默认是 public
+接口的方法默认是 public abstract
 接口只能有 static 和 final 变量
+(1.8 后接口里可以有 static 方法和方法体)
 
 ## 接口和抽象类的区别
 
 1. 抽象类可以有抽象方法也可以没有，继承抽象类的子类如果是抽象类，可以只实现部分，而接口全是抽象方法(1.8 开始可以 static 方法)
 2. 接口可以继承多个接口，但是类不能多继承
 3. 接口只有 static 和 final 变量而抽象类任何变量全都可以
-4. 接口是被实现，抽象类不能被实现
+4. 接口是被实现(可以实现多个接口)，抽象类是被继承
 5. 接口的方法默认全是 public
 
 ## RuntimeError 和其他 error
@@ -112,9 +120,9 @@ runtime:程序员的错误如下标越界，可以不写 trycatch 而是抛出�
 
 ## IO
 
-BIO 同步阻塞 对每个连接都启动一个线程去服务  
-NIO 同步非阻塞 所有连接打到多路复用器 有请求再启动一个线程去服务  
-AIO 异步非阻塞 把数据放在缓冲区中 操作系统通知应用程序来取数据
+BIO(per connection per thread) 同步阻塞 对每个连接都启动一个线程去服务且 acceptor 是阻塞的，accept 返回时新建线程去处理  
+NIO(per request per thread) 同步非阻塞 所有连接打到多路复用器(selector) 有请求再启动一个线程去服务，selector 是阻塞的，可以用较少的线程来处理 selector 返回的请求，NIO 中所有读写都是在 buffer 中完成  
+AIO(per request per thread) 异步非阻塞 把数据放在缓冲区中 操作系统通知应用程序来取数据
 
 ## HashMap && HashTable && ConcurrentHashMap && TreeMap
 
@@ -125,10 +133,15 @@ TreeMap:也是存键值对，红黑树，排序遍历较快
 
 ## 锁
 
-synchronized：关键字，不可中断，非公平锁  
+control the concurrent access to an object.
+
+synchronized：关键字(与锁的功能类似但是不显式创建锁，加锁)，不可中断，非公平锁  
+如果写 synchronized(this)或者把方法标记为 synchronized，会防止并发修改这个类上的所有变量，不太好，建议创建独立的 monitor
 reentrant：类，调用 lock，unlock 实现加锁与释放可中断(lockinterrupt()方法可响应中断)，可公平(公平的话会看队列中是否有其他线程)
 
 ## 死锁
+
+threads/processes are blocked because each thread is holding resources and waiting another resources held by others.
 
 死锁条件:资源独占(mutual exclusive)，请求保持(hold and wait)，环路等待(circular waiting)，不可强夺(no-preemption)
 
@@ -160,7 +173,8 @@ public class ShapeFactory {
 **单例模式**：一个类仅有一个实例对象，提供一个访问他的 getinstance 方法，类中有一个 static 实例
 懒汉(eager)：第一次获取时创建实例
 饿汉(lazy)：当类被加载到 jvm 时创建实例
-用于数据库连接 session
+可用于数据库连接 session，log 对象等
+目的是避免不一致
 
 ```java
 public class SingleObject {
@@ -182,6 +196,8 @@ public class SingleObject {
 
 }
 ```
+
+**建造者模式**：使用多个简单的对象构建出一个复杂对象（McDonald Vegmeal() normalMeal()）
 
 **代理模式**：创建现有对象的代理类，向外界提供接口（可解决远程代理问题，需要的对象在远程，在本地通过代理访问）
 
@@ -401,3 +417,51 @@ Callable 返回 future，且若有异常在 Future.get()时会抛出异常，通
 在新生代触发的是 minor GC，在老年代触发的是 major GC  
 新生代包括 eden space 和 s1，s2。eden 中都是新的对象，经过一次 gc（eden 空间满了会触发 minor gc） 后把 eden 和(s1/s2)存活的放入(s2/s1),保证 s1 和 s2 至少有一个是空的。当经过了一定次数后还存活的，就放入老年代。  
 永久代：存放类方法。类不再被使用了。（为解决内存不够的问题，jkd8 开始永久代被替换成 metaspace，当空间满可以自动清理垃圾）
+
+## Future vs Completeable Future
+
+Future object represent the future result of an operation.
+A Future is used for asynchronous Programming.(isDone() and get()).
+CompletableFuture 是 future 的子类，can perform further actions after the async function returns.
+
+```java
+//异步方法有返回值
+Supplier<Integer> task = ()->1;
+CompletableFuture<Integer> future = CompletableFuture.supplyAsync(task);
+future.thenRun(()->{System.out.println("haha")});
+future.thenRunAsync(()->{System.out.println("haha")});//也可以异步跑
+future.thenAccept(result->{
+    System.out.println(result);
+});//可以把返回值接着用，但是无返回结果，如果要返回结果，用thenapply。如果要接着执行异步方法并返回completableFuture就调用thenCompose
+var first = CompletableFuture.supplyAsync(()->20);
+var second = CompletableFuture.supplyAsync(()->0.9);
+first.thenCombine(second,(a,b)->{
+    return a*b;
+});//用combine处理两个future结果
+
+CompletableFuture.allOf(first,second,third).thenRun();//等三个都做完了，然后做别的
+CompletableFuture.anyOf(first,second,third).thenRun();//等任何一个做完了，然后做别的
+
+future.completeOnTimeout(1,1,TimeUnits.SECOND)//如果需要有一个超时时间,并返回默认值
+future.onTimeout(1,TimeUnits.SECOND)//如果需要有一个超时时间,并不返回默认值，这两个都会返回一个新的future
+//如果异步方法跑出异常，可以trycatch捕获然后调用future.exceptionally返回一个新的值/future对象
+
+```
+
+## volatile 关键字
+
+如果一个线程修改了数据，别的线程可以立即看见
+不依赖 cache 中的数据，而是每次都去内存查这个元素
+
+## wait notify
+
+每个 java 变量都有这两个方法(继承自 object)，当一个线程调用 wait，就会被阻塞，等到另外的线程调用了 notify
+这两个方法的使用需要包在 synchronized(){}中
+
+## atomic 类
+
+atomicinteger 的自增用到了 CAS(compare and swap,CAS(V,O,N)核心思想为：若当前变量实际值 V 与期望的旧值 O 相同，则表明该变量没被其他线程进行修改，因此可以安全的将新值 N 赋值给变量,且 CAS 是原子的。
+
+## LongAdder atomic 类的平替(如果线程很多，atomic 类的效率急剧下降)
+
+在内存中维护了多个 counter，不同的线程更新不同的 counter，当获取具体值的时候，把所有 counter 加起来
