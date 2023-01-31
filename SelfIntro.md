@@ -3,9 +3,9 @@
 ZJY, come from SH,China. Nice to meet you and happy to have the opportunity to be here having interview with you.
 graduate from ecnu with a bachelor degree in cs, pursuing my postgrad at cuhk major in IE, expecting to graduate this summer.  
 When I was an undergrad, 2 periods of internships.  
-Summer vacation of 2021, at MEITUAN as a QA intern. Responsible for testing the functionality on both Web&Mobile apps. Writing auto testing code in Java and monitoring the testing result in Jenkins platform. reporting possible bugs to devs.
+Summer vacation of 2021, at MEITUAN as a QA intern. Responsible for testing the functionality on both Web&Mobile apps. Writing auto testing code in Java using TESTNG framework and monitoring the testing result in Jenkins platform. reporting possible bugs to devs.
 
-Summer of 2022, at Ctrip.com as a BE intern. Responsible for developing and maintaining backend APIs on Flight Ticket Refund Module and writing unit tests for APIs.
+Summer of 2022, at Ctrip.com as a BE intern. Responsible for developing and maintaining backend APIs on Flight Ticket Refund Module. We develop in java under spring framework with mysql db and writing unit tests in groovy.
 
 In my free time, I like watching sports games. To me, it is very inspiring. I enjoy coding as well. Everytime I successfully write code to solve practical problems, it brings me a lot of happiness. That is why I d like to start my career as a developer cuz I want coding to be a major part of my work in my whole career.
 
@@ -21,7 +21,7 @@ In my free time, I like watching sports games. To me, it is very inspiring. I en
 
 Meituan:  
 **Project**  
-Our group was responsible for testing both web and mobile application for shop and restaurant owners to check the information of the customers who made reservations in that resaurant. We perform both manual testing and auto testing. For the auto testing part, I write code in java under TESTNG framework and periodically run the code in Jenkins platform to see whether there are some errors reported. Another part for me, I participated in chaos engineering project to test the robustness of the system with some colleagues.
+Our group was responsible for testing both web and mobile application, which is aimed for merchant and restaurant owners to check the information of the customers who made reservations in that resaurant. We perform both manual testing and auto testing. For the auto testing part, I write code in java under TESTNG framework and periodically run the code in Jenkins platform to see whether there are some errors reported. Another part for me, I participated in chaos engineering with some colleagues to validate whether the system can survive when some failure happened.
 
 **writing auto test case**
 provide some input output case.
@@ -43,7 +43,7 @@ CTrip:
 退票流程：refundapply, validation, feecalculation, send the request to alirline company, voucher/receipt
 
 **Project in CTrip**  
-Our group was responsible for developing flight ticket refund module. I participated in developing new features in SimpleRefundApply api by which the call center can refund the ticket for customer. We only focus on backend system. We develop the system in java with spring framework and mysql db and we write unit test in groovy. BTW We did agile development in our daily working.
+Our group was responsible for developing flight ticket refund module used by customers to refund flight tickets. I participated in developing new features in SimpleRefundApply api by which the call center can refund the ticket for customer. We only focus on backend system. We develop the system in java with spring framework and mysql db and we write unit test in groovy. BTW We did agile development in our daily working.
 
 **Agile**
 we have a short meeting every morning, everyone talking about what he did yesterday and what he will do today. We regard two weeks as a sprint, pm will give tasks, all tasks will be put on the timetable in a web page and assigned to the corresponding developers. we keep track of everything about the task in the system eg: how many days we expect to spend, how many days we actually spend, the doc link. Especially if we cannot proceed the work due to some issue, we should explicitly block the task and wait for pm to solve. That is the daily routine about the agile.
