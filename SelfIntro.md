@@ -21,7 +21,12 @@ In my free time, I like watching sports games. To me, it is very inspiring. I en
 
 Meituan:  
 **Project**  
-Our group was responsible for testing both web and mobile application for shop and restaurant owners to check the information of the customers who made reservations in that resaurant. We perform both manual testing and auto testing. For the auto testing part, we write code in java under TESTNG framework and periodically run the code in Jenkins platform to see whether there are some errors reported. For me, I participated in chaos engineering project to test the robustness of the system with some colleagues.
+Our group was responsible for testing both web and mobile application for shop and restaurant owners to check the information of the customers who made reservations in that resaurant. We perform both manual testing and auto testing. For the auto testing part, I write code in java under TESTNG framework and periodically run the code in Jenkins platform to see whether there are some errors reported. Another part for me, I participated in chaos engineering project to test the robustness of the system with some colleagues.
+
+**writing auto test case**
+provide some input output case.
+call the function with input.
+assert whether the output matched the expected output. If not matched, the framework will help to throw out exceptions. check the log.
 
 **chaos engineering**  
 it is not our daily work but part of my colleagues and I participate in and try to learn and find out the best way to do chaos engineering. The general is firstly we need to manage the chaos in a devops platform called monkey. Chaos(db failure, redis failure, api timeout). Of course we write code in Java TESTNG framework. When writing code, we need to explicitly inject the failure to the system by calling api. Execute the test functions to see whether the system can perform without errors. Finally we need to recover the system, remove the chaos. We have independent environment for testing so it will not influence the production.
@@ -30,13 +35,9 @@ it is not our daily work but part of my colleagues and I participate in and try 
 Timetable panel. Customers book a seat in a restaurant. Owner can see customer information on the timetable panel. (9:00 am several customers). If all seats are booked, customers can no longer book a seat at that time.
 Several cases(no customers, several customers book the same time, several customers book different time. No seats to book).
 
-**writing auto test case**
-provide some input output case.
-call the function with input.
-assert whether the output matched the expected output. If not matched, the framework will help to throw out exceptions. check the log.
-
 **any difficulty?**  
 We have plenty of devops platform(chaos management/cicd/jenkins/service registration) in the company. I need some time to get familiar with that platforms. I think I am a quick learner. Everytime my colleagues show me how to deal with that platform, then I understand. Just need time for learning.
+When writing auto test case, I need to make up some inputs and outputs. I need to read the code, to see different branches which cost some time. After the code is written, it can be executed for a long time until the tested function is modified.
 
 CTrip:  
 退票流程：refundapply, validation, feecalculation, send the request to alirline company, voucher/receipt
