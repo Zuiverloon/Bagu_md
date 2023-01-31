@@ -4,6 +4,14 @@ spring 框架帮助管理类的实例
 
 ## IOC / DI
 
+ioc: a principle that a container that create the object, manage the dependency, and control the whole life cycle.  
+DI: Connecting objects with other objects by the framework. 不用在代码中写 new
+
+好处：
+
+1. switch between different implementations
+2. decoupling, dont need to care about the dependency
+
 一个对象只需要定义它的依赖，当 IOC 容器初始化 bean 时会自动注入装配依赖
 
 ### application context
@@ -96,6 +104,12 @@ aspect oriented programming, we can add additional behavior to methods without m
 实现机制为 java 代理，生成了代理类
 aop 是动态代理，详见 java 动态代理部分
 
+advice 通知/增强:描述了增强如何执行
+join point 连接点：a point where can be inserted a aspect。java 中就是方法的调用
+pointcut 切点：where to insert a advice(before a function / after a function)
+aspect 切面：advice+pointcut
+切点表达式：execution(执行某方法)，within(在某个包内)，annotation(有某个注解)
+
 ## 事务
 
 Spring 不直接管理事务，通过事务管理器来管理。最底层接口为 transactionManager，包括 commit 和 rollback 方法。 可以通过注释@Transactional 或通过 xml 实现声明式的事物。(不要忘了配置 xml 里面的 datasource 如 jdbc 和事务管理器)
@@ -185,5 +199,5 @@ spring:
 
 springboot(基于 spring，一般用来当 restapi 后端):
 
-1. 最重要的功能是自动配置
+1. 最重要的功能是自动配置(springweb 需要导入很多 maven，spring 开启某个功能需要 xml)
 2. 自带内嵌的 tomcat 和 netty
