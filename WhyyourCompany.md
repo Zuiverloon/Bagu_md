@@ -8,6 +8,18 @@
  **any question?**
  -->
 
+## paypal
+
+题库：  
+lru cache(fin)/  
+207 course schedule(fin)/  
+179 最大数字符串 sort(fin)/  
+235,236 LCA(fin)/
+
+反问：
+We are merchant platform team. example about what kind of service we are providing particularly to the merchant customers.
+Seems that we are build applications that used by people all over the world. Approximately how many people in the world are using the service we are building.
+
 # Barclays
 
 **what do you know about our company?**  
