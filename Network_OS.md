@@ -77,11 +77,34 @@ cpu 只能调度线程
 | processes are isolated with each other                     | threads in one process share code,heap but they have independent stacks,PC,cpu context |
 | if one crash, others ok                                    | one crash, other threads in the same process crash                                     |
 
+## REST(Representational State Transfer)
+
+architecture style when we are implementing backend interfaces or apis.  
+use noun to locate the resource,and http method(get/post) to indicate creation,retrieve,update,delete. Data and functionality are regarded as resource.  
+JSON is usually used to deliver data to clients.
+
+1. new a friend: POST localhost:8000/friend
+2. get a friend: GET localhost:8000/friend
+3. modify: PUT localhost:8000/friend
+4. delete: DELETE localhost:8000/friend
+
+**Principles**:
+
+1. uniform interface
+2. client-server mode (decoupling)
+3. stateless
+4. cache
+5. hierarcy
+
 ## 页面置换算法
 
 LRU：最近最久未使用。实现为 index 索引+双向链表  
-最优置换：置换最迟访问的页面。不可能实现，因为系统无法预测未来  
-先进先出：可能置换掉有用的页
+最优置换(Optimal)：置换最迟访问的页面。不可能实现，因为系统无法预测未来  
+先进先出(FIFO)：可能置换掉有用的页
+
+## 页表
+
+store the mapping between virtual address and physical address.
 
 ## 图灵完备（MSHF 傻逼公司）
 
