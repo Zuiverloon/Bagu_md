@@ -4,6 +4,10 @@
 继承 inherit：inherit from base class
 多态 polymorphism：对于父类和自类，uses the same methods to perform different tasks
 
+jdk(development kit):core package, JRE(JVM)
+JVM:runtime engine to run java program. heap, stack, PC. bytecode in JVM will be interpreted
+JRE(runtime env):enables a java program to run in different os.
+
 ## 哪种 String 存在常量池，哪种存在堆
 
 ```java
@@ -126,7 +130,7 @@ AIO(per request per thread) 异步非阻塞 把数据放在缓冲区中 操作�
 
 ## HashMap && HashTable && ConcurrentHashMap && TreeMap
 
-HashMap:1.8 以前是数组(桶)+链表，1.8 以后是数组+红黑树，默认 16 个桶，元素数量超过 loadfactor 0.75\*桶 就扩容一倍  
+HashMap:1.8 以前是数组(桶)+链表(并发扩容会导致死循环，插入是头插，扩容会让链表反转)，1.8 以后是数组+红黑树，默认 16 个桶，元素数量超过 loadfactor 0.75\*桶 就扩容一倍  
 HashTable:类似于 hashmap，不支持 null 为 key 且线程安全(synchronized)  
 Con:volatile 关键词(操作后会被别的线程立即看见)，可以并行操作不同的 bucket，如果是同一个 bucket 就加锁控制  
 TreeMap:也是存键值对，红黑树，排序遍历较快
@@ -253,6 +257,19 @@ clazz.getField();//获取变量
 clazz.getMethod;//获取方法
 clazz.set(Object,value);//设置变量的属性
 clazz.invoke(Object,args);//调用方法
+```
+
+**三种方法获得类**
+
+```java
+F f = new F();
+Class c1 = F.class;//任何类有一个隐含的静态成员变量class
+Class c2 = f.getClass();
+try{
+    Class c3 = Class.forName("全类名")
+} catch(ClassNotFoundException e){
+
+}
 ```
 
 **动态代理**
