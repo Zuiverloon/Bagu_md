@@ -48,6 +48,10 @@ protected: 包内相当于 public，包外只能被继承的类访问
 private: 类外不能访问，即使被继承也不能  
 package: 在包内可访问，在包外不可访问，不写默认是 package
 
+## Arrays.sort
+
+对 primitive 变量是 quicksort，对引用类型是 merge，因为 quicksort 是不稳定的，merge 是稳定的
+
 ## upcasting(子类转父类)/downcasting(父类转子类)
 
 ```java
