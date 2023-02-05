@@ -25,7 +25,7 @@ a val field and a next field pointing to next node.
 ### 单链表和线性表的区别？
 
 LinearTable: allocate continuous memory for fixed length 查找 O(1)，增删 O(n)  
-LinkedList: save elements in distributed space. Length not fixed. 查找 O(1)，增删 O(n)  
+LinkedList: save elements in distributed space. Length not fixed. 查找 O(n)，增删 O(1)  
 如果要频繁查找，且知道长度，用线性表
 要频繁插入，不知道长度，用单链表  
 | linear table(array) |linkedlist|
@@ -265,6 +265,12 @@ public static void heapsort(int[] arr){
         }
     }
 ```
+
+## 排序稳定性 stability
+
+两个元素值相等，原本在前面的元素排完后还在前面，就是稳定的
+稳定的：冒泡，插入，归并
+不稳定：选择，快排，堆
 
 ### 近似有序数列的排序，元素的移动距离不大于 k
 
