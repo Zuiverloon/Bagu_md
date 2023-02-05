@@ -116,6 +116,11 @@ Object o = p.get(0);//OK
 4. 接口是被实现(可以实现多个接口)，抽象类是被继承
 5. 接口的方法默认全是 public
 
+## 包装类和基本类的区别
+
+1. 包装类是引用类型，基本类是 primitive
+2. 包装类有许多方法和属性，基本变量只有 value
+
 ## RuntimeError 和其他 error
 
 runtime:程序员的错误如下标越界，可以不写 trycatch 而是抛出给 jvm  
