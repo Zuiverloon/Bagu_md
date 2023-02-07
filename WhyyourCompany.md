@@ -16,9 +16,13 @@ lru cache(fin)/
 179 最大数字符串 sort(fin)/  
 235,236 LCA(fin)/
 
+**values**:
+inclusion, innovation, collaboration, wellness
+
 反问：
-We are merchant platform team. example about what kind of service we are providing particularly to the merchant customers.
-Seems that we are build applications that used by people all over the world. Approximately how many people in the world are using the service we are building.
+If a ng like me join our merchant platform team, how will the team help me to get familiar with the job and our project? What will I do in the first several month if joining you?
+People in SH or North America work cooperatively in the same project or they just work individually?
+What kind of candidates are you looking for? what kind of characteristics should a good candidate have?
 
 # Barclays
 
