@@ -109,3 +109,9 @@ store the mapping between virtual address and physical address.
 ## 图灵完备（MSHF 傻逼公司）
 
 一系列数据操作的规则（如指令集，编程语言，细胞自动机）可用来模拟单带自动机，那么他是图灵完备的。
+
+## 浏览器输入 url 发生什么
+
+1. dns query
+2. 如果是 http，就发起 tcp 连接，向目标服务器发送 http 请求与返回
+3. 如果是 https，就发起 tcp 连接，发起 tls 握手，验证服务器证书，交换会话密钥，发送用会话密钥加密的 http 请求与返回

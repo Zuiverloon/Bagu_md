@@ -21,6 +21,7 @@ cross join: give the cartisian product result 笛卡尔积(对每一列，匹配
 
 ## 事务 ACID 特性
 
+transaction: a group of statements that perform in one single work. can be commited or rollback.
 Atomic 原子性：事务不可分割，要么全执行，要么全不执行  
 Consistency 一致性：事务开始前、结束后数据库状态一致（银行转帐，有进有出）  
 Isolation 隔离性：事务可并发执行，但对于一个事务感知不到另外的事务  
