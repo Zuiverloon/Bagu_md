@@ -268,8 +268,8 @@ public static void heapsort(int[] arr){
 
 ## 排序稳定性 stability
 
-两个元素值相等，原本在前面的元素排完后还在前面，就是稳定的
-稳定的：冒泡，插入，归并
+两个元素值相等，原本在前面的元素排完后还在前面，就是稳定的  
+稳定的：冒泡，插入，归并  
 不稳定：选择，快排，堆
 
 ### 近似有序数列的排序，元素的移动距离不大于 k
@@ -279,9 +279,12 @@ public static void heapsort(int[] arr){
 ## tree
 
 节点(node) 父节点(parent node) 子节点(child node) 同胞节点(sibling node) 叶子节点(leaf node) 中间节点(internal node) 路径(path) 边(edge)
-遍历(traverse)前序遍历(preorder,左，右，自己)、后序遍历(postorder，右，左，自己)、中序遍历(inorder 左，自己、右)、层次遍历(level order 非递归，依靠队列实现)
+遍历(traverse)前序遍历(preorder,自己，左，右，压栈顺序(自己，右，左))、后序遍历(postorder 左，右，自己，(压栈顺序左，右，用另一个栈倒序输出))、中序遍历(inorder 左，自己、右，压栈尽量压左)、层次遍历(level order 非递归，依靠队列实现)
 二叉树(binary tree)  
 平衡二叉树 balanced tree:左右子树高度(gap between the length of the left and the right tree)在 1 和-1 之间
+perfect binary tree:每个非叶子结点都有两个子节点
+full binary tree:每个节点都是 0 或 2 个子节点
+complete binary tree:每个节点都是 0 或 2 个子节点，并且最后一层的节点都在左边
 
 ## graph
 

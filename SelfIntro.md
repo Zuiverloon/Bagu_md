@@ -82,8 +82,8 @@ tiny web applications to solve my daily problem.
 
 ## 系统设计 (grokking system design)
 
-1. come up with a basic solution
-2. ask question and state the assumption(多少用户，功能)
-3. focus on concepts and let interviewer dive
-4. tradeoffs
-5. dont argue
+1. define requirement(youtube: upload video, view video, comment)
+2. ask estimate the capacity(500 hour video every min,watch 1b video per day)/calculate bandwidth & storage
+3. db table design(user/video/comment)
+4. high-level design(client/cdn/loadbalancer/service/data store/video upload process)
+5. specific component & details(video upload,db scaling)

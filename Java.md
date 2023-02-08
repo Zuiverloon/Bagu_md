@@ -1,11 +1,11 @@
 # Java
 
-封装 encapsulation：把变量和方法绑在一起
-继承 inherit：inherit from base class
+封装 encapsulation：把变量和方法绑在一起  
+继承 inherit：inherit from base class  
 多态 polymorphism：对于父类和自类，uses the same methods to perform different tasks
 
-jdk(development kit):core package, JRE(JVM)
-JVM:runtime engine to run java program. heap, stack, PC. bytecode in JVM will be interpreted
+jdk(development kit):core package, JRE(JVM)  
+JVM:runtime engine to run java program. heap, stack, PC. bytecode in JVM will be interpreted  
 JRE(runtime env):enables a java program to run in different os.
 
 ## 哪种 String 存在常量池，哪种存在堆
@@ -27,12 +27,19 @@ final 类不能被继承如 String 类
 final 方法不能被重写，但可以重载  
 final 变量一旦赋值不可改变
 
+## immutable class
+
+class should be declared final  
+members should be private & final  
+constructor should initialize all field
+
 ## 作为类变量时的初始化
 
 ```java
 int i; // 0;
 String s; // null
 //如果是final变量，必须在构造函数中或直接初始化
+//如果是局部变量，会提示为初始化
 ```
 
 ## 开辟数组会初始化
@@ -47,6 +54,23 @@ public: 任何
 protected: 包内相当于 public，包外只能被继承的类访问  
 private: 类外不能访问，即使被继承也不能  
 package: 在包内可访问，在包外不可访问，不写默认是 package
+
+## static
+
+whether or not the class object is generated, we can have access to the static var or method.
+
+## equals hashcode
+
+if overwrite equals, must write hashcode. because if two obj equals, their hashcode must be equal.
+
+## autobox & unbox
+
+auto convert a primitive type var into a class object (int -> Integer)
+
+## 包装类和基本类的区别
+
+1. 包装类是引用类型，基本类是 primitive
+2. 包装类有许多方法和属性，基本变量只有 value
 
 ## Arrays.sort
 
@@ -96,8 +120,8 @@ Object o = p.get(0);//OK
 
 ## 抽象类
 
-抽象类不能被实例化(instantiated)  
-抽象类不一定包含抽象方法，也可以包含实现的方法，但若包含抽象方法的类了必须是抽象类  
+不能被实例化(instantiated)  
+不一定包含抽象方法，也可以包含实现的方法，但若包含抽象方法的类了必须是抽象类  
 抽象方法只有声明没有实现  
 构造方法，类方法(static 修饰的)不能是抽象  
 子类必须实现抽象方法，除非子类是抽象类
@@ -115,11 +139,6 @@ Object o = p.get(0);//OK
 3. 接口只有 static 和 final 变量而抽象类任何变量全都可以
 4. 接口是被实现(可以实现多个接口)，抽象类是被继承
 5. 接口的方法默认全是 public
-
-## 包装类和基本类的区别
-
-1. 包装类是引用类型，基本类是 primitive
-2. 包装类有许多方法和属性，基本变量只有 value
 
 ## RuntimeError 和其他 error
 
