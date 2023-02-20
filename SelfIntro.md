@@ -82,6 +82,8 @@ tiny web applications to solve my daily problem.
 
 ## 系统设计 (grokking system design)
 
+https://www.freecodecamp.org/news/system-design-interview-practice-tutorial/
+
 1. define requirement(youtube: upload video, view video, comment)
 2. ask estimate the capacity(500 hour video every min,watch 1b video per day)/calculate bandwidth & storage
 3. db table design(user/video/comment)
