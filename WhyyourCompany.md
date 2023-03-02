@@ -8,6 +8,25 @@
  **any question?**
  -->
 
+## ubs
+
+famous bank, cdio = it.building systems, softwares for the business, serve the client.
+
+## why
+
+client all over the world. make contribution, achievement.
+tech team, work with advanced tech, I am big fan, work fits me. banks are developing it service. banking industry will grow prosperously. I would like to join that trend to build something really helpful to our client.
+
+## 岗位
+
+coding and software problem solving, learn financial industry. provide training. rotate to different team to participate in different type of work.
+
+## question
+
+banks are sometimes conservative. banks dont like advanced tech, would rather use old tech. are we embracing new tech?
+
+trainee program. What will be the daily work of a new trainee? familiar with banking, no fin background. what training will you provide and what job will I take?
+
 ## paypal
 
 题库：  
