@@ -10,7 +10,11 @@
 
 ## ubs
 
-famous bank, cdio = it.building systems, softwares for the business, serve the client.
+famous bank, 资管
+cdio = it.building systems, softwares for the business, serve the client.
+pillar:capital strength, simplification & efficiency, risk manage
+principle:client centricity, connectivity, sustainable impact
+behavior: accountability with integrity, collaboration, innovation
 
 ## why
 
@@ -20,12 +24,14 @@ tech team, work with advanced tech, I am big fan, work fits me. banks are develo
 ## 岗位
 
 coding and software problem solving, learn financial industry. provide training. rotate to different team to participate in different type of work.
+internal system(tools,risk control(monitor),business)
+external system(app)
 
 ## question
 
-banks are sometimes conservative. banks dont like advanced tech, would rather use old tech. are we embracing new tech?
+After 2 years, what type of work will i take and which division will I join?
 
-trainee program. What will be the daily work of a new trainee? familiar with banking, no fin background. what training will you provide and what job will I take?
+cdio sh how many people?
 
 ## paypal
 
