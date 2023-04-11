@@ -4,3 +4,4 @@
 排序:912
 kmp:28
 树状数组 fenwicktree:307
+dijkstra: 743
