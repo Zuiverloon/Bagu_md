@@ -135,9 +135,10 @@ https://zhuanlan.zhihu.com/p/74063251
 
 1. 方便扩展
 1. 提高并发，多个消费者可以消费多个分区的消息
+   NOTE:只保证某个分区内的消息是顺序消费，不保证跨分区的顺序消费
 
-**replication**：每个分区有多个副本，主分区(leader)故障就备胎(Follower)上位成为 leader。默认副本最大 10 个，副本数量不大于 broker 数量，follower 和 leader 在不同机器，同一个机器对同一个分区只存放一个副本(包括自己)  
-**consumer group**：多个消费者组成消费组，同一个分区的数据只能被消费组中的一个消费者消费，同组消费者可以消费同一个 topic 的不同分区的数据  
+**replication**：每个分区有多个副本，主分区(leader)故障就备胎(Follower)上位成为 leader。默认副本最大 10 个，副本数量不大于 broker 数量，follower 和 leader 在不同机器，同一个机器对同一个分区只存放一个副本(包括自己)。只有 leader 负责读写，从节点不读写(for consistency)  
+**consumer group**：多个消费者组成消费组，同一个分区的数据只能被消费组中的一个消费者消费，同组消费者可以消费同一个 topic 的不同分区的数据(做法是把某一个分区指派给同消费组中的某一个消费者)  
 **zookeeper**：kafka 集群依靠 zookeeper 来保存集群的元数据
 
 ## 发送数据
