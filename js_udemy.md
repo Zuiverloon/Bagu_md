@@ -245,3 +245,208 @@ clearTimeout(timer); // can stop the timer
 const clock = setInterval(() => console.log(new Date()), 1000);
 // will print once per second
 ```
+
+## OOP in js
+
+### Constructor Functions
+
+```js
+const Person = function (firstName, birthYear) {
+  this.firstName = firstName;
+  this.birthYear = birthYear;
+};
+
+const jonas = new Person("Jonas", 1991);
+
+// 1. New {} is created
+// 2. function is called, this = {}
+// 3. {} link to prototype
+// 4. function automatically return {}
+
+console.log(jonas instanceof Person); // true
+```
+
+### Prototype
+
+Every function has a prototype. All function created by calling a construction function will inherit the property and methods defined on the prototype property
+
+```js
+const jonas = new Person("jonas");
+Person.prototype.calcAge = function(){
+...
+}
+jonas.calcAge();//ok
+console.log(jonas.__proto__ == Person.prototype);
+//true every object has a __proto__ property
+console.log(Person.prototype.isPrototypeOf(jonas));//true
+```
+
+The prototype of Person.prototype is Object.prototype
+Object.prototype.prototype is null
+We can add any function to Array.
+
+```js
+Array.prototype.unique = function () {
+  //...
+};
+```
+
+## ES6 class
+
+it is only a syntax sugar.  
+classes are not hoisted(cannot be used before declaration)
+classes are first-class citizens(can be passed into functions and returned)
+classes are executed in strict mode
+
+### getter and setter
+
+```js
+const account = {
+  movement: [1, 2, 3, 4],
+  get latest() {
+    return this.movement[this.movement.length - 1];
+  },
+
+  set latest(mov) {
+    this.movement.push(mov);
+  },
+};
+
+console.log(account.latest); // 4
+account.latest = 5;
+console.log(account.movement); // [1, 2, 3, 4, 5]
+```
+
+### static method
+
+```js
+class Person {
+  static hey() {
+    console.log("hey");
+  }
+}
+
+Person.hey(); // hey
+```
+
+### Object.create
+
+```js
+const personProto = {
+  calcAge() {
+    console.log(2037 - this.birthYear);
+  },
+
+  init(firstName, birthYear) {
+    this.firstName = firstName;
+    this.birthYear = birthYear;
+  },
+};
+
+const sarah = Object.create(personProto);
+sarah.init("Sarah", 1979);
+sarah.calcAge(); // 58
+```
+
+### inheritance between classes
+
+#### using constructor
+
+```js
+const Person = function (firstName, birthYear) {
+  this.firstName = firstName;
+  this.birthYear = birthYear;
+};
+Person.prototype.calcAge = function () {
+  console.log(2037 - this.birthYear);
+};
+
+const Student = function (firstName, birthYear, course) {
+  Person.call(this, firstName, birthYear);
+  this.course = course;
+};
+
+//Linking prototypes
+Student.prototype = Object.create(Person.prototype);
+
+Student.prototype.introduce = function () {
+  console.log(`My Name is ${this.firstName}`);
+};
+
+Student.prototype.constructor = Student;
+
+const mike = new Student("mike", 2020, "CS");
+mike.introduce(); // My Name is mike
+mike.calcAge(); // 17
+```
+
+### using es6 class
+
+```js
+class PersonCL {
+  constructor(name, birthYear) {
+    this.name = name;
+    this.birthYear = birthYear;
+  }
+
+  calcAge() {
+    console.log(2037 - this.birthYear);
+  }
+}
+
+class StudentCL extends PersonCL {
+  constructor(name, birthYear, course) {
+    super(name, birthYear);
+    this.course = course;
+  }
+
+  calcAge() {
+    console.log(`I am ${2037 - this.birthYear}`);
+  }
+}
+
+const mike = new StudentCL("mike", 2020, "CS");
+mike.calcAge(); // I am 17
+```
+
+### using Object.create()
+
+```js
+const personProto = {
+  calcAge() {
+    console.log(2037 - this.birthYear);
+  },
+
+  init(firstName, birthYear) {
+    this.firstName = firstName;
+    this.birthYear = birthYear;
+  },
+};
+
+const studentProto = Object.create(personProto);
+studentProto.init = function (firstName, birthYear, course) {
+  personProto.init.call(this, firstName, birthYear);
+  this.course = course;
+};
+const jay = Object.create(studentProto);
+jay.init("jay", 2020);
+studentProto.calcAge = function () {
+  console.log(`I am ${2037 - this.birthYear}`);
+};
+jay.calcAge(); // I am 17
+```
+
+### private fields (only in stage 3, may become a real js feature in the future)
+
+```js
+class Account {
+  #movement = [];
+
+  #approve(val) {
+    console.log(`${val} approved`);
+  }
+}
+
+const acc1 = new Account();
+console.log(acc1.#movement); // Private field '#movement' must be declared in an enclosing class
+```
