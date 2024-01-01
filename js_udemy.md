@@ -450,3 +450,189 @@ class Account {
 const acc1 = new Account();
 console.log(acc1.#movement); // Private field '#movement' must be declared in an enclosing class
 ```
+
+## Asynchronous
+
+### Promise and fetchAPI
+
+Promise: a container for an asynchronously delivered value
+(Pending, settled, fulfilled / rejected)
+
+```js
+const request = fetch('');
+console.log(request); // a promise
+
+//consume a promise
+const getCountryData = function(country){
+fetch(`https://restcountries.com/rest/v2/name/${country}`)
+    .then(response => response.json())
+    .then(data => console.log(data[0]));
+};
+// Chaining promise
+const getCountryData = function(country){
+fetch(`https://restcountries.com/rest/v2/name/${country}`)
+    .then(response => response.json())
+    .then(data => {
+    return fetch('...');
+    }).then(response => response.json())
+    .then(data => console.log(data));
+    )
+};
+
+// handling rejected promise(lose network connection)
+// way1
+const getCountryData = function(country){
+fetch(`https://restcountries.com/rest/v2/name/${country}`)
+    .then(response => response.json(), err => alert(err))
+    .then(data => console.log(data[0]));
+};
+// way2
+const getCountryData = function(country){
+fetch(`https://restcountries.com/rest/v2/name/${country}`)
+    .then(response => response.json())
+    .then(data => console.log(data[0]))
+    .catch(err => alert(err));
+};
+// throw error
+const getCountryData = function(country){
+fetch(`https://restcountries.com/rest/v2/name/${country}`)
+    .then(response => {
+    if (!response.ok){
+    throw new Error("Something wrong");
+    }
+    return response.json();
+    })
+    .then(data => console.log(data[0]))
+    .catch(err => alert(err))
+    .finally(...);
+};
+```
+
+Callback queue is used to handle all asynchronous tasks.
+Event loop does orchestration for js runtime, picking event from callback queue and put into call stack.
+Microtasks queue is for promises, having priority over callback queue. It can starve callback queue because all microtasks will be executed before callback queue.
+
+```js
+//Build a promise
+const lotteryPromise = new Promise(function (resolve, reject) {
+  if (Math.random() >= 0.5) {
+    resolve("You win");
+  } else {
+    reject("You lose");
+  }
+});
+lotteryPromise.then((res) => console.log(res)).catch((err) => console.log(err));
+
+const wait = function (second) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, second * 1000);
+  });
+};
+```
+
+### async/await
+
+```js
+const whereAmI = async function(country){
+    await fetch(...);
+    //fetch().then(); // the same as await
+}
+```
+
+### try catch
+
+```js
+try {
+  let x = 1;
+  const y = 2;
+  y = 3;
+} catch (err) {
+  alert(err.message);
+}
+```
+
+### execute promise in parallel
+
+```js
+const data = await Promise.all([
+fetch(...).then(),
+fetch(...).then(),
+fetch(...).then()
+]);
+// Other promise conbinators
+Promise.race([...]);//get the first returned result, either resolved or rejected will return. Usually used to set the timeout of an API request
+Promise.allSettled([]);//return all, not short circuit any rejected while Promise.all will short circuit.
+Promise.allSettled([
+    Promise.resolve("1"),
+    Promise.reject("2"),
+    Promise.resolve("3"),
+    ]).then(res => console.log(res));
+
+/*
+[
+  { status: 'fulfilled', value: '1' },
+  { status: 'rejected', reason: '2' },
+  { status: 'fulfilled', value: '3' }
+]
+
+*/
+
+Promise.all([
+Promise.resolve("1"),
+Promise.reject("2"),
+Promise.resolve("3"),
+]).then(res => console.log(res[0])).catch(err=>console.log(err));
+/*
+2
+*/
+
+Promise.any();// return the first fulfilled promise, slightly different from race
+Promise.race([
+    Promise.reject(1),
+    Promise.resolve(2)
+    ]).then(res=>console.log(res)).catch(err=>console.log(err));
+// 1
+
+
+Promise.any([
+    Promise.reject(1),
+    Promise.resolve(2)
+    ]).then(res=>console.log(res)).catch(err=>console.log(err));
+// 2
+```
+
+## Module
+
+if not exported, all variables in a module are not accessible to other modules.
+
+```js
+//default import
+export default function () {}
+
+import add from "/script.js";
+//named import
+const add = function () {};
+
+export { add };
+
+import { add } from "/script.js";
+// the imported variable is the reference to the original variable. Any modification will affect.
+```
+
+Top level await(ES2022): await can be used in top level in module
+
+```js
+const res = await fetch("...");
+```
+
+Bundling with Parcel
+Parcel will bundle all script into one file, useful when facing old browser
+Babel transpile es6 to es5 to support old systems, parcel already integrate babel.
+
+### Modern and clean code
+
+use descriptive var names: what they contain
+use descriptive function name: what they do
+use strong type check === / !==
+functions no more than 3 params
+return same type of data as received
