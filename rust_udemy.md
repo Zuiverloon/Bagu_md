@@ -560,3 +560,206 @@ Some(i) if i == y => println!("is y"),
 _ => println!("else"),
 } // is y
 ```
+
+### Generic
+
+Generics: abstract standards for concrete types
+
+```rust
+struct Point<T> {
+x:T,
+y:T,
+}
+
+let coor = Point{x:1,y:1};
+let coor1 = Point{x:'a', y:'b'};
+```
+
+### Traits
+
+Use trait to define shared behavior in an abstract way
+
+```rust
+trait Overview {
+    fn overview(&self) -> String{
+        String::from("this is a course")
+    } // default implementation
+}
+
+struct Course{
+    headline:String,
+    author:String,
+}
+struct AnotherCourse{
+    headline:String,
+    author:String,
+}
+impl Overview for Course{
+    fn overview(&self) -> String{
+        format!("{},{}",self.headline,self.author)
+    }
+}
+impl Overview for AnotherCourse{
+    fn overview(&self) -> String{
+        format!("{},{}",self.headline,self.author)
+    }
+}
+let course = Course{headline:String::from("course"),author:String::from("ZJY")};
+let course1 = AnotherCourse{headline:String::from("course"),author:String::from("ZJY")};
+println!("{}",course.overview()); // course,ZJY
+println!("{}",course1.overview()); // course,ZJY
+
+// if do not implement, then use the default
+impl Overview for Course{}
+println!("{}",course.overview()); // this is a course
+```
+
+### Trait as parameter
+
+```rust
+fn call_overview(item: &impl Overview){
+println!("{}",item.overview());
+}
+call_overview(&course);
+```
+
+### Drop trait
+
+a preset trait in Rust, used for freeing resources.
+
+```rust
+impl Drop for Course{
+    fn drop(&mut self){
+        println!("Dropping {}", self.author)
+    }
+}
+drop(course1);
+```
+
+even if we do not explicitly call this drop method, it will be executed when the instance is dropped/out of scope
+
+### Operator overloading
+
+```rust
+use std::ops::Add;
+
+#[derive(Debug)]
+struct Point<T>{
+x:T,
+y:T,
+}
+impl<T> Add for Point<T>
+where
+T:Add<Output = T>{
+type Output = Self;
+fn add(self, rhs: Self) -> Self{
+Point{
+x:self.x + rhs.x,
+y:self.y + rhs.y,
+}
+}
+}
+
+let p1 = Point{x:1,y:1};
+let p2 = Point{x:2,y:3};
+let sum = p1+p2;
+println!("{:?}",sum); // Point { x: 3, y: 4 }
+```
+
+## Cargo, crates and package
+
+crates are about code sharing between projects, modules are about code sharing within a project
+
+## Collections
+
+### Vector
+
+```rust
+let mut nums: Vec<i32> = vec![];
+nums.push(1);
+nums.push(2);
+nums.push(3);
+
+let first = nums.pop(); // pop the last element
+println!("{:?}", first);
+
+let num1 = nums[1]; // copy
+// &nums[1] if copy is not implemented
+
+println!("{}", nums.len());
+
+nums.insert(1,10); // insert 10 to pos 1
+```
+
+### Binary heap
+
+```rust
+use std::collections::BinaryHeap;
+
+
+let mut bheap = BinaryHeap::new();
+bheap.push(1);
+bheap.push(20);
+bheap.push(10);
+
+println!("{:?}", bheap.pop());
+println!("{:?}", bheap.peek());
+```
+
+### Map
+
+```rust
+use std::collections::HashMap;
+
+let mut hm = HashMap::new();
+hm.insert(1,1);
+hm.insert(5,2);
+hm.insert(20,3);
+println!("{:?}", hm);
+
+println!("{}", hm.contains_key(&5)); // true
+println!("{:?}", hm.get(&5));// Some(2)
+
+let one = hm.remove(&1); // 1
+let ent = hm.remove_entry(&5); // (5,2)
+
+hm.clear();
+```
+
+### Set
+
+```rust
+let mut st = HashSet::new();
+st.insert(1);
+st.insert(1);
+st.insert(2);
+st.insert(3);
+
+for x in st.iter(){
+    println!("{}",x);
+} // 3 1 2
+
+st.remove(&2);
+
+let mut st2 = HashSet::new();
+st2.insert(1);
+st2.insert(3);
+st2.insert(5);
+st2.insert(7);
+
+for x in st.intersection(&st2){
+    println!("{}",x);
+}
+
+let inter = &st & &st2; // shorthand intersection
+for x in inter.iter(){
+    println!("{}",x);
+} // 1 3
+
+let uni = &st | &st2;
+for x in uni.iter(){
+    println!("{}",x);
+} // 1 2 3 5 7
+
+let diff = &st - &st2; //  elements that in st but not in st2
+```
