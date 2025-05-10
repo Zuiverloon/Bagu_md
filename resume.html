@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Name - Software Engineer</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f9;
+        color: #333;
+      }
+      header {
+        text-align: center;
+        padding: 20px 0;
+      }
+      .contact-info a {
+        color: #007bff;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .section {
+        margin: 20px 0;
+      }
+      h1,
+      h2 {
+        color: #2c3e50;
+        margin-bottom: 1px;
+      }
+      p {
+        margin-top: 2px;
+      }
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+      li {
+        margin-bottom: 20px;
+      }
+      .skills-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .skills-grid div {
+        margin-top: 3px;
+        background-color: #e3e3e3;
+        padding: 10px;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="section" id="name"></div>
+      <p class="contact-info" id="contact-info"></p>
+    </header>
+
+    <section class="section" id="summary">
+      <h2>Professional Summary</h2>
+      <!-- <p>
+        Experienced software engineer with expertise in developing scalable
+        applications, writing clean code, and collaborating with
+        cross-functional teams to deliver high-quality solutions.
+      </p> -->
+    </section>
+
+    <section class="section" id="work">
+      <h2>Work Experience</h2>
+      <ul>
+        <!-- <li>
+          <strong>Software Engineer</strong> - Tech Company, City (Start Date –
+          End Date)<br />
+          - Developed and maintained web applications using React and
+          Node.js.<br />
+          - Optimized database queries, improving performance by 30%.<br />
+          - Collaborated with a team to deliver features ahead of schedule.
+        </li>
+        <li>
+          <strong>Junior Developer</strong> - Startup, City (Start Date – End
+          Date)<br />
+          - Contributed to the development of a mobile app using Flutter.<br />
+          - Wrote unit tests to ensure code quality and reliability.<br />
+          - Participated in weekly sprint planning and code reviews.
+        </li> -->
+      </ul>
+    </section>
+
+    <section class="section" id="education">
+      <h2>Education</h2>
+      <ul>
+        <!-- <li>
+          <strong>Bachelor of Science in Computer Science</strong> - University
+          Name, City (Graduation Year)<br />
+          - Relevant coursework: Data Structures, Algorithms, Software
+          Engineering.
+        </li> -->
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Skills</h2>
+      <div class="skills-grid">
+        <div>Java</div>
+        <div>Javascript</div>
+        <div>Python</div>
+        <!-- <div>C++</div> -->
+        <!-- <div>Rust</div> -->
+        <div>SQL</div>
+      </div>
+      <div class="skills-grid">
+        <div>Springboot</div>
+        <div>React.js</div>
+        <div>Kafka</div>
+        <div>Linux</div>
+        <div>Git</div>
+      </div>
+    </section>
+
+    <!-- <section class="section">
+      <h2>Certifications</h2>
+      <ul>
+        <li>Certified Kubernetes Application Developer (Year)</li>
+        <li>Microsoft Azure Developer Associate (Year)</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Projects</h2>
+      <ul>
+        <li>
+          <strong>Project Name</strong>: Brief description of the project.
+          Technologies used: React.js, Node.js, MongoDB.
+        </li>
+        <li>
+          <strong>Project Name</strong>: Brief description of the project.
+          Technologies used: Python, Flask, MySQL.
+        </li>
+      </ul>
+    </section>
+   -->
+  </body>
+
+  <script>
+    const ENGLISH_ATTRIBUTES = {
+      name: "Junyao Zhang(章君尧)",
+      email: "junyao43.zhang@outlook.com",
+      tel: "+86 18721537952",
+      summary:
+        "Self-motivated Junior Software Engineer with nearly 2 years of professional experience.<br>" +
+        "Proficient in developing both robust backend systems and frontend web applications.<br>" +
+        "Passionate about coding and solving complex problems through innovative programming.",
+      education: [
+        {
+          title: "Bachelor of Engineering in Computer Science",
+          school: "East China Normal University(华东师范大学)",
+          location: "Shanghai",
+          duration: "Sep 2018 - Jun 2022",
+          content: [
+            "GPA: 3.4 / 4.0",
+            "Awarded Scholarships for three consecutive years",
+            "Core Course: Data Structure, Operating System, Database Theory, Compilation Theory, Computer Network, Computer composition and principles, Information Security",
+          ],
+        },
+        {
+          title: "Master of Science in Information Engineering",
+          school: "Chinese University of Hong Kong(香港中文大学)",
+          location: "Hong Kong",
+          duration: "Sep 2022 - Jul 2023",
+          content: [
+            "GPA: 3.75 / 4.0, Dean's List",
+            "Core Course: Blockchain & Applications, Big Data System and Information Processing, Data Science in Practices, Edge Computing and IoT, Computer and Network Security, Cryptography, Information Security and Privacy",
+          ],
+        },
+      ],
+      work: [
+        {
+          title: "Software Engineer II",
+          company: "PayPal",
+          location: "Shanghai",
+          duration: "Jul 2023 - Apr 2025",
+          content: [
+            "Design and Develop Merchant Observability Platform, a consolidated dashboard where merchant related metrics and alerts are displayed and monitored",
+            "Build frontend dashboard UI in React.js, provide clear and actionable observability features for end users.(using ReactApexChart package)",
+            "Build backend Java application and integrate with multiple upstream datasource(Elastic Search, Datadog, Oracle, MySQL, Bigquery, Miscellaneous PayPal Internal services)",
+            "Build log data ingestion pipeline from kafka to elasticsearch/druid as the datasource of realtime anomaly detection",
+            "",
+          ],
+        },
+        {
+          title: "Backend Engineer Intern",
+          company: "Trip.com(携程)",
+          location: "Shanghai",
+          duration: "Jun 2022 - Jul 2022",
+          content: [
+            "Participating in agile development, maintaining and developing backend APIs on 'Flight Ticket Refund Application Module' with <strong>Java and Springboot framework</strong>",
+            "Writing unit test samples in Groovy language",
+          ],
+        },
+        {
+          title: "Quality Assurance Engineer Intern",
+          company: "Meituan(美团)",
+          location: "Shanghai",
+          duration: "Jul 2021 - Sep 2021",
+          content: [
+            "Writing and executing test samples on Web & Mobile App, reporting bugs to developers",
+            "Writing auto testing cases with <strong>Java</strong> and TestNG framework, scheduling regular testing tasks on Jenkins platform",
+            "Participate in Chaos Engineering on Monkey platform(an internal chaos management tool) to validate robustness of APIs",
+          ],
+        },
+      ],
+    };
+    const CHINESE_ATTRIBUTES = {
+      name: "Junyao Zhang(章君尧)",
+      email: "junyao43.zhang@outlook.com",
+      tel: "+86 18721537952",
+      summary: "",
+    };
+    const isEnglish = true;
+    const ATTRIBUTES = isEnglish ? ENGLISH_ATTRIBUTES : CHINESE_ATTRIBUTES;
+    const buildName = (parser) => {
+      const element = document.getElementById("name");
+      const name = document.createElement("h1");
+      name.textContent = ATTRIBUTES["name"];
+      element.appendChild(name);
+    };
+    // const buildContactInfo = () => {
+    //   const element = document.getElementById("name");
+    // };
+    const buildContactInfo = (parser) => {
+      const element = document.getElementById("contact-info");
+      const emailContext = ATTRIBUTES["email"];
+      const emailHTML = parser.parseFromString(
+        `<a href="mailto:${emailContext}">${emailContext}</a>`,
+        "text/html"
+      );
+      const telContext = ATTRIBUTES["tel"];
+      const telHTML = parser.parseFromString(
+        `<a>${telContext}</a>`,
+        "text/html"
+      );
+      element.appendChild(emailHTML.body.firstChild);
+      element.appendChild(
+        parser.parseFromString("&nbsp;|&nbsp;", "text/html").body.firstChild
+      );
+      element.appendChild(telHTML.body.firstChild);
+    };
+
+    const buildEducation = (parser) => {
+      const element = document.getElementById("education");
+      const educationHtml = parser.parseFromString(
+        `<ul>${ATTRIBUTES["education"]
+          .map((obj) => {
+            // console.log(obj);
+            const template = `<li><strong>${obj.title}</strong> - <strong><em>${
+              obj.school
+            } </em></strong>, ${obj.location} (${obj.duration})<br>${obj.content
+              .map((line) => `- ${line}`)
+              .join("<br>")}</li>`;
+            return template;
+          })
+          .join("")}</ul>`,
+        "text/html"
+      );
+      element.appendChild(educationHtml.body.firstChild);
+    };
+
+    const buildWork = (parser) => {
+      const element = document.getElementById("work");
+      const educationHtml = parser.parseFromString(
+        `<ul>${ATTRIBUTES["work"]
+          .map((obj) => {
+            // console.log(obj);
+            const template = `<li><strong>${obj.title}</strong> - <strong><em>${
+              obj.company
+            }</em></strong>, ${obj.location} (${obj.duration})<br>${obj.content
+              .map((line) => `- ${line}`)
+              .join("<br>")}</li>`;
+            return template;
+          })
+          .join("")}</ul>`,
+        "text/html"
+      );
+      element.appendChild(educationHtml.body.firstChild);
+    };
+
+    const buildSummary = (parser) => {
+      const element = document.getElementById("summary");
+      const summaryHtml = parser.parseFromString(
+        `<p>${ATTRIBUTES["summary"]}</p>`,
+        "text/html"
+      );
+      element.appendChild(summaryHtml.body.firstChild);
+    };
+
+    const parser = new DOMParser();
+    buildSummary(parser);
+    buildName(parser);
+    buildContactInfo(parser);
+    buildEducation(parser);
+    buildWork(parser);
+  </script>
+</html>
