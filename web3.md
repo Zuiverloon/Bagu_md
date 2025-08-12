@@ -191,6 +191,93 @@ uint[] memory b = a;    // calldata → memory	Copy (deep copy)
 // calldata → storage	not allowed, must go through memory
 ```
 
+### how to send eth?
+
+**transfer()**
+
+```solidity
+_to.transfer(msg.value);
+```
+
+Sends 2300 gas  
+Reverts on failure  
+Simple and safe, but deprecated for many use cases due to gas limitations
+
+**send()**
+
+```solidity
+bool success = _to.send(msg.value);
+require(success, "Send failed");
+
+```
+
+Also sends 2300 gas  
+Returns false on failure (does not revert automatically)  
+Requires manual error handling  
+Rarely used today
+
+**call()**
+
+```solidity
+(bool success, ) = _to.call{value: msg.value}("");
+require(success, "Call failed");
+```
+
+Forwards all remaining gas  
+Returns a tuple: (success, data)  
+Most flexible and currently recommended method  
+Must be used with reentrancy protection
+
+### fallback function
+
+special function that gets triggered when:  
+A contract is called with data that doesn’t match any existing function signature  
+Or when Ether is sent to the contract and no receive() function is defined  
+properties of fallback:  
+Must be declared external  
+Can be marked payable to accept Ether  
+Has no name, no arguments, and no return value  
+Limited to 2300 gas when triggered via .send() or .transfer()  
+Used for logging, rejecting unexpected calls, or forwarding calls in proxy contracts
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract FallbackExample {
+    event Log(string func, uint256 gas);
+
+    // Fallback function
+    fallback() external payable {
+        emit Log("fallback", gasleft());
+    }
+
+    // Receive function (optional)
+    receive() external payable {
+        emit Log("receive", gasleft());
+    }
+
+    function getBalance() public view returns (uint256) {
+        return address(this).balance;
+    }
+}
+
+```
+
+### receive function
+
+a special function, similar to fallback  
+Triggered when the contract receives Ether with no data  
+Must be declared as external payable
+
+Send ETH
+│
+├── msg.data is empty
+│ ├── receive() exists → call receive()
+│ └── else → call fallback()
+│
+└── msg.data is not empty → call fallback()
+
 ### inheritance
 
 inherit functions, variables, modifiers from parent contract
@@ -310,7 +397,19 @@ a payable address can receive eth by calling address.transfer() or call()
 
 function do not read or modify the blockchain state
 
-### require keyword vs revert keyword vs slient revert
+### require keyword vs revert keyword vs slient revert vs assert
+
+**required**
+validate input, if false, then revert transaction and optionally provides an error message. Refund unused gas
+
+**revert**
+Explicitly aborts execution and reverts state changes. refund unused gas.
+
+**slient revert**
+A transaction fails and reverts without returning a reason string or custom error.
+
+**assert**
+verifies something must be true. if failed, revert transaction and consume all gas
 
 ### unchecked keyword
 
@@ -369,57 +468,6 @@ external: only from outside the contract(not internally)
 a function can be overridden by a derived contract
 private function cannot be virtual
 all functions in interface are implicitly virtual
-
-## solidity storage
-
-solidity storage 的每一个 slot 是 32Bytes
-
-    contract FunWithStorage{
-        //顺序存储在storage中
-        uint256 favouriteNumber;
-        bool someBool;
-        uint256[] myArray;
-        uint256 constant NOT_IN_STORAGE = 123;//const和immutable不存在storage中，因为他们直接写在contract的bytecode中
-
-        constructor(){
-            favouriteNumber = 25;
-            someBool = true;
-            myArray.push(222);//每次插入一项，做hash
-        }
-
-        function doStuff() public {
-            uint256 newVar = favouriteNumber+1;
-            uint256 otherVar = 7;
-            //方法中的变量不存在storage中，存在memory中，方法执行完就删了
-        }
-    }
-
-Storage  
-[0] 0x00..19  
-[1] 0x00..01  
-[2] 0x00..01 存数组的长度  
-[3] 如果是 mapping 则留白  
-[keccak256(2)]0x00..0de  
-如果想节省一点 gas，可以把少读 storage，读一次进 memory 后重复读 memory(mappings 不能存进 memory，sorry！)因为读写 storage 要花很多 gas(SLOAD 花 800 SSTORE 花 20000)
-
-## storage vs memory
-
-storage 是存在 blockchain 上，memory 是存本地，用完即删.
-用了 storage 关键字的变量会指向 blockchain 中的那个对象，若修改即为修改 blockchain 上存储的东西
-
-## 小游戏
-
-https://cryptozombies.io/
-
-## youtube
-
-https://www.youtube.com/watch?v=gyMwXuJrbJQ
-
-## Others
-
-### Uniswap
-
-### makerdao
 
 ### Reentrant Guard
 
@@ -499,6 +547,71 @@ Calls withdraw(), which sends ETH before updating the balance.
 The fallback function re-enters withdraw() before the balance is zeroed.
 
 This loop continues, draining the contract.
+
+### solidity storage
+
+solidity storage 的每一个 slot 是 32Bytes
+
+    contract FunWithStorage{
+        //顺序存储在storage中
+        uint256 favouriteNumber;
+        bool someBool;
+        uint256[] myArray;
+        uint256 constant NOT_IN_STORAGE = 123;//const和immutable不存在storage中，因为他们直接写在contract的bytecode中
+
+        constructor(){
+            favouriteNumber = 25;
+            someBool = true;
+            myArray.push(222);//每次插入一项，做hash
+        }
+
+        function doStuff() public {
+            uint256 newVar = favouriteNumber+1;
+            uint256 otherVar = 7;
+            //方法中的变量不存在storage中，存在memory中，方法执行完就删了
+        }
+    }
+
+Storage  
+[0] 0x00..19  
+[1] 0x00..01  
+[2] 0x00..01 存数组的长度  
+[3] 如果是 mapping 则留白  
+[keccak256(2)]0x00..0de  
+如果想节省一点 gas，可以把少读 storage，读一次进 memory 后重复读 memory(mappings 不能存进 memory，sorry！)因为读写 storage 要花很多 gas(SLOAD 花 800 SSTORE 花 20000)
+
+## storage vs memory
+
+storage 是存在 blockchain 上，memory 是存本地，用完即删.
+用了 storage 关键字的变量会指向 blockchain 中的那个对象，若修改即为修改 blockchain 上存储的东西
+
+## 小游戏
+
+https://cryptozombies.io/
+
+## youtube
+
+https://www.youtube.com/watch?v=gyMwXuJrbJQ
+
+## Others
+
+### oracle
+
+an oracle is a trusted mechanism that allows smart contracts to access external data
+
+### Uniswap
+
+allow swap ERC-20 token without centralized intermediaries
+
+#### AMM automated market maker
+
+replace order book with liquidity pool, price determined by constant product formula: x\*y=k, x and y are two tokens, k is constant, k is determined by the initial token supply
+
+#### LP liquidity pool
+
+contains two tokens. the deeper the pool is, the less slippage when doing swap
+
+### makerdao
 
 ### IPFS
 

@@ -488,15 +488,43 @@ mp["a"]["b"]
 
 ### first-class function
 
-a normal function, can be treated as other value
+a normal function, can be treated as other value(assign to variable, pass as argument, return from function)
 
 ### higher-order function
 
-a function that takes a function as an arg
+a function that takes a function as an arg, or return a function as its result, or both
+
+```golang
+func process(nums []int, callback func(int)) {
+    for _, num := range nums {
+        callback(num)
+    }
+}
+```
 
 ### currying
 
 write a function that takes a function as input, and returns a new function. Just like enhance a function or AOP(injecting some logic) in java.
+
+```golang
+func curry(f func(int, int) int) func(int) func(int) int {
+    return func(a int) func(int) int {
+        return func(b int) int {
+            return f(a, b)
+        }
+    }
+}
+
+func add(a, b int) int {
+    return a + b
+}
+
+func main() {
+    curriedAdd := curry(add)
+    addTwo := curriedAdd(2)
+    fmt.Println(addTwo(3)) // Output: 5
+}
+```
 
 ### defer
 
@@ -505,9 +533,35 @@ Always used to close db connection, files
 
 ### closure
 
-a closure is a function that reference variables from outside its own function body
+a closure is a function that reference variables from outside its own function body even if the scope has exited
+
+```golang
+func newCounter() func() int {
+    count := 0
+    return func() int {
+        count++
+        return count
+    }
+}
+
+func main() {
+    counter := newCounter()
+    fmt.Println(counter()) // 1
+    fmt.Println(counter()) // 2
+}
+```
 
 ### anonymous function
+
+a function defined without a name. It's also called a function literal or a lambda function
+
+```golang
+greet := func(name string) {
+    fmt.Println("Hello,", name)
+}
+
+greet("Gopher") // Output: Hello, Gopher
+```
 
 ## pointer
 
@@ -595,7 +649,7 @@ func readCh(ch <-chan int){
 }
 ```
 
-### read only channel
+### write only channel
 
 chan<-
 
