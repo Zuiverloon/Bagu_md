@@ -332,3 +332,7 @@ for (int p = 1; p <= n; p++) {
 ## LRU cache
 
 环形双向链表+hash 表：https://leetcode.cn/problems/lru-cache-lcci/
+
+## 莫队/回滚莫队
+
+左端点抖动，右端点变大 lc3636(https://leetcode.cn/problems/threshold-majority-queries/description/)

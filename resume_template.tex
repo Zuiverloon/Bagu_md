@@ -1,0 +1,157 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,top=1cm, bottom=2cm, left=2cm, right=2cm]{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{parskip}
+\usepackage{xeCJK}
+\usepackage{fontspec} % For custom fonts (XeLaTeX or LuaLaTeX)
+\usepackage[most]{tcolorbox}
+\tcbset{
+  skillbox/.style={
+    boxrule=0pt,
+    colback=gray!20,
+    colframe=white,
+    arc=4pt,
+    auto outer arc,
+    boxsep=2pt,
+    left=4pt,
+    right=4pt,
+    top=2pt,
+    bottom=2pt,
+    enhanced,
+    valign=center,
+    halign=center,
+    on line, % <-- This makes it inline!
+  }
+}
+
+% Font setup (optional)
+\setmainfont{Helvetica Neue} % Or any font installed on your system
+
+% Section formatting
+\titleformat{\section}
+  {\fontsize{14pt}{17pt}\selectfont\bfseries}
+  {}{0em}{}[\titlerule]
+
+\newif\ifcantoname
+\cantonamefalse
+
+\newif\ifuniversitychinese
+\universitychinesefalse
+
+
+\newif\ifiang
+\iangtrue
+
+\newif\ifwebthree
+\webthreetrue
+
+\newif\ifincludesalary
+\includesalarytrue
+
+
+\ifcantoname
+    \newcommand{\name}{Junyao (Joey) Zhang 章君堯}
+\else
+    \newcommand{\name}{Junyao Zhang 章君尧}
+\fi
+
+\newcommand{\email}{junyao43.zhang@outlook.com}
+\newcommand{\tel}{+86 187 2153 7952}
+
+\begin{document}
+
+%====================
+% Header
+%====================
+\begin{center}
+    {\LARGE \textbf \name}\\
+    \href{mailto:you@example.com}\email \quad | \quad \tel \quad | \quad Shanghai, China
+\end{center}
+
+\vspace{0.5em}
+
+%====================
+% Personal Statement
+%====================
+\section*{Personal Statement}
+I'm a full-stack software engineer with 2 years of experience building dynamic web applications from front to back. I thrive in collaborative environments, embrace challenges with curiosity, and am always eager to level up my skills. Passionate about writing clean, efficient code and creating impactful digital experiences.\ifwebthree{ Keen interest in blockchain technology and Web3 ecosystem.}\fi
+\ifiang
+    \\
+    Eligible for IANG Visa to work in HK
+    \fi
+\ifincludesalary
+    \\
+    Expected Salary: HKD 30,000/month
+\fi
+
+%====================
+% Education
+%====================
+\section*{Education}
+{\fontsize{13}{13}\selectfont\textbf{Chinese University of Hong Kong}\ifuniversitychinese{(香港中文大学)}\fi} \hfill \textit{Hong Kong SAR}  \\
+Master of Science in Information Engineering \hfill \textit{Sept 2022 - Jul 2023}\\[0.2em]
+\ifiang
+    - Eligible for IANG Visa to work in Hong Kong \\[0.2em]
+\fi
+- Dean's List \\[0.2em]
+- Core Course: Blockchain \& Applications, Big Data System and Information Processing, Data Science in Practices, Edge Computing and IoT, Computer and Network Security, Cryptography, Information Security and Privacy
+
+\vspace{0.7em}
+
+{\fontsize{13}{13}\selectfont\textbf{East China Normal University}\ifuniversitychinese{(华东师范大学)}\fi} \hfill \textit{Shanghai, China}\\
+Bachelor of Engineering in Computer Science \hfill \textit{Sept 2018 - Jul 2022}\\[0.2em]
+- Awarded Scholarships for three consecutive years \\[0.2em]
+- Core Course: Data Structure, Operating System, Database Theory, Compilation Theory, Computer Network, Computer composition and principles, Information Security, etc \\
+
+
+%====================
+% Work Experience
+%====================
+\section*{Work Experience}
+
+{\fontsize{13}{13}\selectfont\textbf{PayPal Inc.}} Shanghai, China \hfill \textit{Jul 2023 - Present(Last day Sept.30)} \\
+\textit{Software Engineer} \\[0.2em]
+- Design and develop Merchant Monitoring \& Observability Platform, a consolidated dashboard where internal users can check merchant related metrics and API activities\\
+- Develop frontend dashboard UI in React.js, provide clear and actionable observability features for end users \\
+- Develop backend Java application and integrate with multiple upstream services(Elastic Search, Datadog, Oracle, MySQL, BigQuery, Miscellaneous PayPal Internal services) \\
+- Build business log ingestion pipeline from kafka to BigQuery and Druid as the datasource of realtime anomaly detection \\ 
+- Set up and maintain datadog dashboard and alerts for component health monitoring \\
+- Tech Stack: Java(Springboot), React.js, Kafka, MySQL, BigQuery, Druid, Datadog \\
+% \vspace{0.5em}
+
+%====================
+% Skills (Optional)
+%====================
+\section*{Skills}
+Decent Understanding in Algorithms \\
+% \vspace{2em}
+%Java, JavaScript, Python, Golang, SQL, Springboot, React.js, Kafka \\
+\noindent
+\tcbox[skillbox]{Java} 
+\tcbox[skillbox]{JavaScript}
+\tcbox[skillbox]{Python}
+\tcbox[skillbox]{Golang}
+\tcbox[skillbox]{SQL}
+\tcbox[skillbox]{Springboot}
+\tcbox[skillbox]{React.js}
+\tcbox[skillbox]{Kafka} \\
+\noindent
+\tcbox[skillbox]{Git}
+\tcbox[skillbox]{Linux command} \\
+\ifwebthree
+\noindent
+\tcbox[skillbox]{ethers.js}
+\tcbox[skillbox]{Solidity} \\
+\fi
+\noindent
+\tcbox[skillbox]{Chinese Mandarin (native)}
+\tcbox[skillbox]{English (fluent)}
+% \ifiang\tcbox[skillbox]{Chinese Cantonese(beginner)}\fi
+
+
+
+
+
+\end{document}

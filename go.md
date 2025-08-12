@@ -658,3 +658,135 @@ type store[P product] interface {
 
 
 ```
+
+## GMP model
+
+internal scheduler model. short for Goroutine, Machine, and Processor.
+https://www.topgoer.com/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/GMP%E5%8E%9F%E7%90%86%E4%B8%8E%E8%B0%83%E5%BA%A6.html#%E4%BA%8C%E3%80%81goroutine-%E8%B0%83%E5%BA%A6%E5%99%A8%E7%9A%84-gmp-%E6%A8%A1%E5%9E%8B%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%80%9D%E6%83%B3
+
+## GC
+
+https://zhuanlan.zhihu.com/p/334999060
+
+GC 负责回收堆上的内存空间
+
+### Go1.3(Pre) 标记清除法(mark-and-sweep)
+
+1. Stop the world 暂停程序业务逻辑
+2. 找到所有可达对象，做上标记
+3. 清除未标记对象
+4. resume
+
+缺点：程序卡顿，需扫描整个 heap，产生 heap 碎片
+
+### Go1.3(Post)
+
+先 resume，再清除
+
+### Go1.5 三色并发标记（concurrent tri-color mark-and-sweep algorithm）
+
+0. 需要 STW
+1. 新创建的对象都是白色
+2. 每次 GC 开始，从根节点开始遍历所有对象（非递归），遍历到的放入灰色
+3. 遍历灰色，将灰色对象引用的对象从白色放入灰色，把本身灰色变黑色
+4. 重复第三步直到没有灰色
+5. 回收白色
+
+缺点：也需要 STW，不然的话万一白色被黑色引用，白色就丢了， 或灰色连着白色时白色被破坏，子节点也都会被删除
+解决第一个问题使用插入屏障（仅对堆生效，对栈不生效），当黑色节点添加一个白色节点时，把白色节点变灰
+完成三色扫描后，栈上仍有可能存在黑色引用白色，此时使用 STW+三色标记
+解决第二个问题使用删除屏障，如果被删除的对象为灰色或白色，则标记为灰色（保护灰色到白色的路径不断）这种方式回收精度低，一个对象被删除了最后一个指向他的指针还是活着，下一轮 GC 被清理掉
+
+### Go1.8 混合写屏障（hybrid write barrier）
+
+1、GC 开始将栈上的对象全部扫描并标记为黑色(之后不再进行第二次重复扫描，无需 STW)  
+2、GC 期间，任何在栈上创建的新对象，均为黑色
+3、被删除的对象标记为灰色
+4、被添加的对象标记为灰色
+
+### 强三色不等式
+
+黑色不允许引用白色
+
+### 弱三色不等式
+
+黑色可以引用白色，但是白色上游必须有灰色
+
+## new vs make
+
+new 返回指针，变量的值是零值，创建的是引用类型以外的其他类型变量  
+make 返回值，创建 slice、map 和 chan 等引用变量
+
+## 内存管理 stack vs heap
+
+go 编译器根据逃逸分析(escape analysis)决定分配在 stack 还是 heap  
+stack: 只在函数中用到  
+heap: 逃逸的变量(被返回的指针，长期的 object)
+
+| Feature    | Stack                     | Heap                                       |
+| ---------- | ------------------------- | ------------------------------------------ |
+| Lifetime   | Short (function scope)    | Long (survives after function ends)        |
+| Speed      | Fast (no GC needed)       | Slower (managed by Garbage Collector)      |
+| Allocation | Automatic                 | Managed by Go runtime                      |
+| Use Case   | Temporary/local variables | Returned pointers, closures, large objects |
+
+## 多线程打印 1-100
+
+用 channel
+
+```golang
+	var wg sync.WaitGroup
+	limit:=100
+	wg.Add(limit)
+
+	ch := make(chan int,1)
+	for i:=0;i<limit;i++{
+		go func(number int) {
+			defer wg.Done()
+			for {
+				t:= <- ch
+				if t<number{
+					ch <- t
+				} else {
+					fmt.Println(number)
+					ch <- t+1
+					return
+				}
+			}
+
+		}(i)
+	}
+
+	ch <- 0
+	wg.Wait()
+```
+
+用 sync.Mutex.Lock()
+
+```golang
+var wg sync.WaitGroup
+	limit:=100
+	wg.Add(limit)
+
+	counter := 0
+
+	var lock sync.Mutex
+	for i:=0;i<limit;i++{
+		go func(number int) {
+            defer lock.Unlock()
+			defer wg.Done()
+			for {
+				lock.Lock()
+				if counter == number {
+					fmt.Println(counter)
+					counter++
+					return
+				}
+				lock.Unlock()
+
+			}
+		}(i)
+	}
+
+	wg.Wait()
+```

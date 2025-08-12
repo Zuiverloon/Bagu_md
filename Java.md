@@ -510,3 +510,94 @@ atomicinteger 的自增用到了 CAS(compare and swap,CAS(V,O,N)核心思想为�
 ## LongAdder atomic 类的平替(如果线程很多，atomic 类的效率急剧下降)
 
 在内存中维护了多个 counter，不同的线程更新不同的 counter，当获取具体值的时候，把所有 counter 加起来
+
+## 多线程打印 1-100
+
+用 synchronized，需要 wait/notify
+
+```java
+private static int counter = 0;
+    private static int limit = 100;
+
+    private static Object mutex = new Object();
+
+
+    public static void main(String[] args) {
+        for (int i = 0; i < limit; i++) {
+            final int idx = i;
+            new Thread(() -> {
+                synchronized (mutex) {
+                    while (counter <= idx) {
+                        if (counter == idx) {
+                            counter++;
+                            System.out.println(idx);
+                            mutex.notifyAll();
+                            return;
+                        } else {
+                            try {
+                                mutex.wait();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }).start();
+        }
+    }
+```
+
+用 synchronized，不需要 wait/notify
+
+```java
+private static int counter = 0;
+    private static int limit = 100;
+
+    private static Object mutex = new Object();
+
+
+    public static void main(String[] args) {
+        for (int i = 0; i < limit; i++) {
+            final int idx = i;
+            new Thread(() -> {
+                while (counter <= idx) {
+                    synchronized (mutex) {
+                        if (counter == idx) {
+                            counter++;
+                            System.out.println(idx);
+                        }
+                    }
+                }
+            }).start();
+        }
+    }
+```
+
+用 rentrant lock
+
+```java
+private static int counter = 0;
+    private static int limit = 100;
+
+    private static ReentrantLock lock = new ReentrantLock();
+
+
+    public static void main(String[] args) {
+        for (int i = 0; i < limit; i++) {
+            final int idx = i;
+            new Thread(() -> {
+                while (counter <= idx) {
+                    lock.lock();
+                    if (counter == idx) {
+                        counter++;
+                        System.out.println(idx);
+                    }
+                    lock.unlock();
+
+                }
+
+            }).start();
+        }
+    }
+
+```
