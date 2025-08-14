@@ -453,6 +453,44 @@ Callable 返回 future，且若有异常在 Future.get()时会抛出异常，通
 1. execute 方法提交不需要返回值的任务，无法判断是否执行完成
 2. submit 方法提交需要返回值的任务，返回一个 Future 对象，通过 Future.get 来判断是否执行完成(get 会阻塞直到执行完成)
 
+### 内存模型
+
+本地方法栈：执行非 java 方法
+PC：程序计数器，记录下一条指令位置
+虚拟机栈：各种线程的栈空间，用于函数调用，本地变量，返回地址
+堆：所有 object 和数组，GC 管理，分为新生代+老年代
+方法区（元空间/永久代）：存放 class metadata，方法和静态变量，但是元空间位于本地内存，永久代也不在堆上
+
+堆外内存：不由 GC 管理的，需手动申请释放的本地内存
+
+```java
+ByteBuffer buffer = ByteBuffer.allocateDirect(1024); // Allocates 1KB off-heap
+buffer.putInt(42);
+buffer.flip();
+System.out.println(buffer.getInt()); // Outputs: 42
+
+((DirectBuffer) buffer).cleaner().clean();
+```
+
+### 内存管理
+
+| s                | jdk8-                                                        | jdk8+                                               |
+| ---------------- | ------------------------------------------------------------ | --------------------------------------------------- |
+| class metadata   | 存在永久代 PermGen                                           | 存在元空间 metaspace                                |
+| 永久代特征       | 大小固定，会 OOM                                             | 大小不固定                                          |
+| 堆结构           | 新生代+老年代+永久代（不在堆而在方法区，只有 hotspot VM 有） | 新生代+老年代+元空间(在本地内存中，不在 jvm 内存中) |
+| 新生代 Young Gen | EDEN + survivor space(S0 + S1)                               | same                                                |
+| 老年代 Old Gen   | 存活久的对象，清理他们需要 mark and swap                     | same                                                |
+| GC               | minor(新生代)+major(老年代)+full                             | same，但是引入了新的 collector                      |
+| GC 算法          | serial， parallel，CMS(Concurrent Mark Sweep)                | G1,ZGC,...                                          |
+| 字符串池         | 位于永久代                                                   | 位于堆上                                            |
+| 参数             | -XX:PermSize, -XX:MaxPermSize                                | -XX:MetaspaceSize, -XX:MaxMetaspaceSize             |
+
+JDK8 关键改变：
+引入元空间取消永久代  
+元空间自动扩容  
+GC 算法升级，使用 G1
+
 ## 垃圾回收
 
 **如何 dereference**：把引用记为 null，把引用指向另一个对象，匿名变量(new String();)  
@@ -460,7 +498,7 @@ Callable 返回 future，且若有异常在 Future.get()时会抛出异常，通
 **引用计数**：统计指向对象的引用个数，弊端：需要额外空间记录，无法解决循环引用  
 **可达性分析**：从 gc root(堆外指向堆内的引用，如局部变量，已加载类的静态变量) 开始，能访问的都标记为可达，问题：多线程环境下，已访问过的对象可能被其他线程修改  
 在新生代触发的是 minor GC，在老年代触发的是 major GC  
-新生代包括 eden space 和 s1，s2。eden 中都是新的对象，经过一次 gc（eden 空间满了会触发 minor gc） 后把 eden 和(s1/s2)存活的放入(s2/s1),保证 s1 和 s2 至少有一个是空的。当经过了一定次数后还存活的，就放入老年代。  
+新生代包括 eden space 和 s0，s1。eden 中都是新的对象，经过一次 gc（eden 空间满了会触发 minor gc） 后把 eden 和(s1/s0)存活的放入(s0/s1),保证 s1 和 s2 至少有一个是空的。当经过了一定次数后还存活的，就放入老年代。  
 永久代：存放类方法。类不再被使用了。（为解决内存不够的问题，jkd8 开始永久代被替换成 metaspace，当空间满可以自动清理垃圾）
 
 ## Future vs Completeable Future
