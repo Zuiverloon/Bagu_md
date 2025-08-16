@@ -1,5 +1,19 @@
 # Network
 
+## 5 layer model
+
+Application(HTTP,DNS,SMTP):Interfaces directly with user applications
+(7 layer)Presentation(SSL\TLS): manage encryption,compression, encoding
+(7 layer)Session: manage session
+Transport(TCP,UDP):ensure reliable data transfer between host, handle segmentation and error control
+Network(IP,ICMP,ARP):routing and addressing
+Data link(Ethernet, WIFI802.11): handle node to node data transfer, manage MAC addressing and error handling
+Physical(cable)
+
+## DNS domain name system
+
+find ip address by domain name
+
 ## HTTP
 
 无状态 每次发送 HTTP 请求都认为是从不同客户端发出  
@@ -59,6 +73,14 @@ header(8B) 原端口 目的端口 长度 checksum
 | reliable ordered    | not            |
 | 16B header          | 8B header      |
 
+## QUIC
+
+the foundation of HTTP/3
+Runs over UDP
+Built-in encryption
+Allowing multiple streams within a single connection
+Reducing handshake time
+
 # OS
 
 ## 进程和线程的区别
@@ -76,6 +98,10 @@ cpu 只能调度线程
 | any program in execution(at least one thread in a process) | a segment of a process,cpu only schedule thread                                        |
 | processes are isolated with each other                     | threads in one process share code,heap but they have independent stacks,PC,cpu context |
 | if one crash, others ok                                    | one crash, other threads in the same process crash                                     |
+
+## thread vs coroutine
+
+coroutine: Lightweight function that can be paused/resumed, when doing context switching, only function states need to save. memory usage is low, since coroutines can share stack. cooperative scheduling(like GMP in GO)
 
 ## REST(Representational State Transfer)
 
@@ -115,3 +141,74 @@ store the mapping between virtual address and physical address.
 1. dns query
 2. 如果是 http，就发起 tcp 连接，向目标服务器发送 http 请求与返回
 3. 如果是 https，就发起 tcp 连接，发起 tls 握手，验证服务器证书，交换会话密钥，发送用会话密钥加密的 http 请求与返回
+
+## 用 char array 实现 malloc function
+
+```c
+void* my_malloc(size_t size) {
+    if (heap_index + size > HEAP_SIZE) {
+        return NULL; // Out of memory
+    }
+
+    void* ptr = &heap[heap_index];
+    heap_index += size;
+    return ptr;
+}
+
+int main() {
+    int* a = (int*)my_malloc(sizeof(int));
+    if (a) {
+        *a = 123;
+        printf("C: Allocated int = %d\n", *a);
+    }
+
+    char* msg = (char*)my_malloc(6);
+    if (msg) {
+        snprintf(msg, 6, "Hi!");
+        printf("C: Allocated string = %s\n", msg);
+    }
+
+    return 0;
+}
+```
+
+```c++
+#include <iostream>
+#include <cstring>
+
+constexpr size_t HEAP_SIZE = 1024;
+
+class SimpleAllocator {
+private:
+    char heap[HEAP_SIZE];
+    size_t heap_index = 0;
+
+public:
+    void* allocate(size_t size) {
+        if (heap_index + size > HEAP_SIZE) {
+            return nullptr;
+        }
+        void* ptr = &heap[heap_index];
+        heap_index += size;
+        return ptr;
+    }
+};
+
+int main() {
+    SimpleAllocator allocator;
+
+    int* a = static_cast<int*>(allocator.allocate(sizeof(int)));
+    if (a) {
+        *a = 456;
+        std::cout << "C++: Allocated int = " << *a << std::endl;
+    }
+
+    char* msg = static_cast<char*>(allocator.allocate(6));
+    if (msg) {
+        std::strcpy(msg, "Hey!");
+        std::cout << "C++: Allocated string = " << msg << std::endl;
+    }
+
+    return 0;
+}
+```

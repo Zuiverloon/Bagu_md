@@ -106,7 +106,7 @@ MYISAM(用于较少的 update，较多的 select 的场景):
 
 **脏读**：读到了另一个事务未提交的数据  
 **不可重复读**：当前事务两次读取数据，同一行的结果不同(中间有一个别的事务修改了数据)  
-**幻读**：当前事务两次读取数据，第二次读到了第一次没读到的数据
+**幻读**：当前事务两次读取数据，第二次读到了第一次没读到的数据(中间有一个别的事务插入了数据)
 
 ## 隔离等级
 
@@ -114,6 +114,17 @@ MYISAM(用于较少的 update，较多的 select 的场景):
 **读已提交(Read Commited)**：可解决脏读  
 **可重复读(Repeatable Read)**：mysql 默认的隔离等级，可解决不可重复读  
 **串行化(Serializable)**：可解决幻读，但是要加锁，所以效率低
+
+## MySQL Isolation Levels Comparison
+
+| Isolation Level      | Dirty Read   | Non-repeatable Read | Phantom Read   | Locking Behavior                                                                       |
+| -------------------- | ------------ | ------------------- | -------------- | -------------------------------------------------------------------------------------- |
+| **READ UNCOMMITTED** | ✅ Allowed   | ✅ Allowed          | ✅ Allowed     | No locks; reads uncommitted changes.                                                   |
+| **READ COMMITTED**   | ❌ Prevented | ✅ Allowed          | ✅ Allowed     | Shared locks on read; releases after each statement.                                   |
+| **REPEATABLE READ**  | ❌ Prevented | ❌ Prevented        | ❌ Prevented\* | Shared locks held until transaction ends; uses **next-key locking**.                   |
+| **SERIALIZABLE**     | ❌ Prevented | ❌ Prevented        | ❌ Prevented   | Uses **range locks**; forces full isolation like transactions are executed one-by-one. |
+
+> \*In MySQL’s InnoDB engine, **REPEATABLE READ** prevents phantom reads using **next-key locking**, which combines row-level locks with gap locks.
 
 ## innodb 如何解决幻读？
 
@@ -147,3 +158,55 @@ MVCC(Multiversion Concurrency Control):为每一条数据加上两个版本号�
 **每行数据长度限制**：64KB，页中一行的大小为 8KB，超过 8KB 的数据存在溢出页(只针对 varchar，varbinary)
 
 **每个表最多 4096 个字段**(受到每行长度 8KB 的限制，如果全是 8B 的字段，那只能有 1000 个字段)
+
+## MVCC Multi-Version Concurrency Control only in innodb
+
+https://juejin.cn/post/7066633257781035045
+
+用处是在读写的场景下，读不加锁也可以读到某一版本的快照。可解决 RU 隔离级别下的脏读和 RC 级别下不可重复读的问题
+
+当前读：读取最新版本数据，并且要保证其他事务不会修改当前数据，当前读需要加锁，如 `select... lock in share mode(共享锁)` `select... for update(排他锁)`  
+快照读：每次修改数据，都会写 undo log，优点是每次读不加锁，缺点是可能读到不是最新的版本。一般的查询都是快照读。
+
+```sql
+select * from t_user where id=1
+```
+
+### MVCC 实现原理
+
+每行都有隐藏字段（隐藏主键 row_id、事务 ID trx_id、回滚指针 roll_pointer）以及 undo log 和 ReadView
+版本链：修改记录时 rollpointer 会指向上一版本那一行
+
+### 索引失效的场景
+
+1. 不满足最左前缀原则，联合索引必须从最左边的字段开始匹配
+2. 使用了函数表达式，如 year()
+3. 使用了 like+通配符
+4. 使用 or 并且某个条件没有走索引
+5. 使用了!=,<>
+6. 数据分配不均，字段重复率高，如性别，，会被优化器忽略
+
+### 为什么索引用 b+树
+
+1. 磁盘访问高效：非叶子节点不存储数据，使层数少，减少了磁盘读取次数
+2. 数据在叶子节点，并且按顺序排列，便于范围查询和排序，叶子节点通过链表链接，遍历高效
+3. 数据库读取以页为单位，b+树节点适配磁盘结构
+4. 结构矮胖，查询路径短
+
+B 树的缺点是非叶子节点也存数据，导致树层数变高  
+红黑树节点只存一个键，树高，磁盘访问多  
+哈希表不支持范围查询  
+跳表用于内存
+
+### 行锁 record lock (innodb)
+
+加在索引记录上的锁，锁某一行，粒度小，基于索引实现，没有索引会退化成表锁
+
+### 间隙锁 Gap Lock (innodb)
+
+间隙锁是 InnoDB 在 可重复读（RR）隔离级别下引入的一种锁，用于防止“幻读”现象：
+锁定的是两个索引记录之间的“间隙”，而不是具体的记录。防止其他事务在该间隙中插入新记录，避免当前事务重复查询时看到“幻影”数据。
+
+### 临键锁（Next-Key Lock）
+
+临键锁是 行锁 + 间隙锁 的组合，锁定当前记录和前一个记录之间的间隙。默认在 RR 隔离级别下使用。用于解决幻读问题。
