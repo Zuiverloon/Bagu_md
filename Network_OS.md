@@ -81,6 +81,17 @@ Built-in encryption
 Allowing multiple streams within a single connection
 Reducing handshake time
 
+## server 可以维持多少 TCP 连接？
+
+TCP 连接由 4 元组决定{local IP, local port, remote IP, remote port}
+理论上一个 IP 可以有 65536 个 port(16bit)，可以有 2\*\*32 个 IP，一共是 2\*\*48 个连接，但是实际上取决于
+
+1. OS 配置：Linux 取决于 ulimit, file-max, and ip_local_port_range， windows 取决于外部设备端口范围和
+2. 文件描述符(file descriptor)：一个 TCP 连接需要一个文件描述符，linux 默认 1024 但是可增加
+3. 内存：一个 TCP 连接消耗 3KB，8GM 内存的 server 可以维护 1m 个
+
+现实中，一般的 linux 服务器可以维护 10w-1m，windows 一般小于 50w
+
 # OS
 
 ## 进程和线程的区别

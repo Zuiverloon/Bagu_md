@@ -1,13 +1,11 @@
 # tell me about your self
 
-ZJY, come from SH,China. Nice to meet you and happy to have the opportunity to be here having interview with you.
-graduate from ecnu with a bachelor degree in cs, pursuing my postgrad at cuhk major in IE, expecting to graduate this summer.  
-When I was an undergrad, 2 periods of internships.  
-Summer vacation of 2021, at MEITUAN as a QA intern. Responsible for testing the functionality on both Web&Mobile apps. Writing auto testing code in Java using TESTNG framework and monitoring the testing result in Jenkins platform. reporting possible bugs to devs.
-
-Summer of 2022, at Ctrip.com as a BE intern. Responsible for developing and maintaining backend APIs on Flight Ticket Refund Module. We develop in java under spring framework with mysql db and writing unit tests in groovy.
-
-In my free time, I like watching sports games. To me, it is very inspiring. I enjoy coding as well. Everytime I successfully write code to solve practical problems, it brings me a lot of happiness. That is why I d like to start my career as a developer cuz I want coding to be a major part of my work in my whole career.
+ZJY, born and grew up in SH. I got my bachelor degree in CS from ECNU. interesting fact is that my home is close to university, only 3 kilometers away. when college student, I usually went to college in the morning, and came back home when finishing all courses.  
+I went to HK and got my master degree from CUHK.  
+After graduation, I came back to SH and joined Paypal as a recent graduate.  
+In the past 2 years, I worked at PayPal, Our team is responsible for developing merchant monitoring and observability platform. It is an internally used platform where users can check merchant API activity and other useful metrics like auth rate. Our target user is account manager, supporting engineers and product managers.  
+Apart from work, in my leisure time, I like watching sports games, I enjoy kpop music, I like learning foreign languages(topik4), I am able to speak a little bit korean as well.I enjoy coding as well. Everytime I successfully write code to solve practical problems, it brings me a lot of happiness. That is why I d like to start my career as a developer.  
+Anyway, that's pretty much about myself, happy to hear from katrina, thanks for giving me the chance.
 
 ## how to describe a project?
 
