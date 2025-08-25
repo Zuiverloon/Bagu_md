@@ -69,15 +69,6 @@ tiny web applications to solve my daily problem.
    1. **mysql** one expense is a row of data. (how much, date, what I buy)
    1. **why build this project** need a tool to monitor my daily expense. write different sql query to filter the data as I wish. learn framework like vue to have fun.
 
-## 撕题：
-
-1. 确认需求，了解边界
-2. 边界防护，错误判断
-3. 思路说明，最好有多个思路
-4. 写代码 并 走查
-5. 测试代码
-6. 注释
-
 ## 系统设计 (grokking system design)
 
 https://www.freecodecamp.org/news/system-design-interview-practice-tutorial/

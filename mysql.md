@@ -102,39 +102,16 @@ MYISAM(用于较少的 update，较多的 select 的场景):
 1. 每次查询有原子性，速度快，无事务
 2. 允许没有索引和主键，索引保存行地址
 
-## 并发问题
-
-**脏读**：读到了另一个事务未提交的数据  
-**不可重复读**：当前事务两次读取数据，同一行的结果不同(中间有一个别的事务修改了数据)  
-**幻读**：当前事务两次读取数据，第二次读到了第一次没读到的数据(中间有一个别的事务插入了数据)
-
-## 隔离等级
-
-**读未提交(Read Uncommited)**：啥都没  
-**读已提交(Read Commited)**：可解决脏读  
-**可重复读(Repeatable Read)**：mysql 默认的隔离等级，可解决不可重复读  
-**串行化(Serializable)**：可解决幻读，但是要加锁，所以效率低
+## 并发问题 & 隔离等级
 
 ## MySQL Isolation Levels Comparison
 
-| Isolation Level      | Dirty Read   | Non-repeatable Read | Phantom Read   | Locking Behavior                                                                       |
-| -------------------- | ------------ | ------------------- | -------------- | -------------------------------------------------------------------------------------- |
-| **READ UNCOMMITTED** | ✅ Allowed   | ✅ Allowed          | ✅ Allowed     | No locks; reads uncommitted changes.                                                   |
-| **READ COMMITTED**   | ❌ Prevented | ✅ Allowed          | ✅ Allowed     | Shared locks on read; releases after each statement.                                   |
-| **REPEATABLE READ**  | ❌ Prevented | ❌ Prevented        | ❌ Prevented\* | Shared locks held until transaction ends; uses **next-key locking**.                   |
-| **SERIALIZABLE**     | ❌ Prevented | ❌ Prevented        | ❌ Prevented   | Uses **range locks**; forces full isolation like transactions are executed one-by-one. |
-
-> \*In MySQL’s InnoDB engine, **REPEATABLE READ** prevents phantom reads using **next-key locking**, which combines row-level locks with gap locks.
-
-## innodb 如何解决幻读？
-
-https://dev.mysql.com/doc/refman/8.0/en/innodb-consistent-read.html  
-如果是默认隔离等级，在同一事务中，第二次及以后的读都是读第一次读的快照(但是可以看到当前事务对数据库的修改？，看不到别的事务对数据库的修改)  
-MVCC(Multiversion Concurrency Control):为每一条数据加上两个版本号，一个是当前数据版本号，一个是删除版本号。  
-**select**：若当前数据版本号小于等于事务版本号，说明该数据是之前存在或本事务操作的；删除版本号要么为空，要么大于事务版本号，可以保证事务之前该数据未被删除  
-**insert**：插入数据的版本号设置为当前事务版本号  
-**delete**：将删除行的版本号设置为当前事务版本号  
-**update**：对原数据删除并插入，相当于上两个操作的合集
+| Isolation Level               | 脏读 Dirty Read （读到了另一个事务未提交的数据）                                  | 不可重复读 Non-repeatable Read（当前事务两次读取数据，同一行的结果不同(中间有一个别的事务修改了数据) ） | 幻读 Phantom Read（当前事务两次读取数据，第二次读到了第一次没读到的数据(中间有一个别的事务插入了数据)） | Locking Behavior                                       |
+| ----------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **读未提交 READ UNCOMMITTED** | 不可解决                                                                          | 不可解决                                                                                                | 不可解决                                                                                                | No locks; reads uncommitted changes.                   |
+| **读已提交 READ COMMITTED**   | 可解决（通过 mvcc，每次查询生成一个新的 read view，只包含已提交的事务生成的数据） | 不可解决（因为他是每次查询创建 view， 不是事务一开始就创建）                                            | 不可解决                                                                                                |                                                        |
+| **可重复读 REPEATABLE READ**  | 可解决                                                                            | 可解决（事务开始时创建一个 read view，记录哪些事务是活跃的，每次查询根据事务版本判断哪些版本可读）      | 可解决（使用临键锁（行+间隙），不允许插入新纪录）                                                       |                                                        |
+| **串行化 SERIALIZABLE**       | ❌ Prevented                                                                      | ❌ Prevented                                                                                            | ❌ Prevented                                                                                            | 可串行化会对所有读操作加共享锁，使用范围锁锁定查询区间 |
 
 ## innodb 锁定
 
@@ -161,23 +138,22 @@ MVCC(Multiversion Concurrency Control):为每一条数据加上两个版本号�
 
 ## MVCC Multi-Version Concurrency Control only in innodb
 
-https://juejin.cn/post/7066633257781035045
-
-用处是在读写的场景下，读不加锁也可以读到某一版本的快照。可解决 RU 隔离级别下的脏读和 RC 级别下不可重复读的问题
+每行数据维护多个版本，读操作读取符合可见性规则的版本，而写操作创建新版本。用处是在读写的场景下，读不加锁也可以读到某一版本的快照。可解决 RU 隔离级别下的脏读和 RC 级别下不可重复读的问题
 
 当前读：读取最新版本数据，并且要保证其他事务不会修改当前数据，当前读需要加锁，如 `select... lock in share mode(共享锁)` `select... for update(排他锁)`  
-快照读：每次修改数据，都会写 undo log，优点是每次读不加锁，缺点是可能读到不是最新的版本。一般的查询都是快照读。
+快照读：innoDB 根据 Read View 判断哪些版本是当前事务可见的，优点是每次读不加锁，缺点是可能读到不是最新的版本。一般的查询都是快照读。
 
-```sql
-select * from t_user where id=1
-```
+1. select：使用 read view 判断哪些版本可见
+2. insert：为新插入的记录设置当前事务 id，回滚指针为空
+3. update：原始记录写进 undo log，trx id 更新，回滚指针指向 undo log 里，修改数据为新值
+4. delete：原始记录写进 undo log，trx id 更新，回滚指针指向 undo log，设置一个隐藏的删除位 delete flag
 
 ### MVCC 实现原理
 
-每行都有隐藏字段（隐藏主键 row_id、事务 ID trx_id、回滚指针 roll_pointer）以及 undo log 和 ReadView
+每行都有隐藏字段（隐藏主键 row_id、事务 ID trx_id、回滚指针指向上一个版本 roll_pointer）以及 undo log 和 ReadView
 版本链：修改记录时 rollpointer 会指向上一版本那一行
 
-### 索引失效的场景
+## 索引失效的场景
 
 1. 不满足最左前缀原则，联合索引必须从最左边的字段开始匹配
 2. 使用了函数表达式，如 year()
@@ -186,7 +162,7 @@ select * from t_user where id=1
 5. 使用了!=,<>
 6. 数据分配不均，字段重复率高，如性别，，会被优化器忽略
 
-### 为什么索引用 b+树
+## 为什么索引用 b+树
 
 1. 磁盘访问高效：非叶子节点不存储数据，使层数少，减少了磁盘读取次数
 2. 数据在叶子节点，并且按顺序排列，便于范围查询和排序，叶子节点通过链表链接，遍历高效
@@ -198,15 +174,31 @@ B 树的缺点是非叶子节点也存数据，导致树层数变高
 哈希表不支持范围查询  
 跳表用于内存
 
-### 行锁 record lock (innodb)
+## 行锁 record lock (innodb)
 
 加在索引记录上的锁，锁某一行，粒度小，基于索引实现，没有索引会退化成表锁
 
-### 间隙锁 Gap Lock (innodb)
+## 间隙锁 Gap Lock (innodb)
 
-间隙锁是 InnoDB 在 可重复读（RR）隔离级别下引入的一种锁，用于防止“幻读”现象：
-锁定的是两个索引记录之间的“间隙”，而不是具体的记录。防止其他事务在该间隙中插入新记录，避免当前事务重复查询时看到“幻影”数据。
+锁定的是两个索引记录之间的“间隙”，而不是具体的记录。防止其他事务在该间隙中插入新记录
 
 ### 临键锁（Next-Key Lock）
 
-临键锁是 行锁 + 间隙锁 的组合，锁定当前记录和前一个记录之间的间隙。默认在 RR 隔离级别下使用。用于解决幻读问题。
+临键锁是 行锁 + 间隙锁 的组合，锁定当前记录和前一个记录之间的间隙，防止插入及更新。默认在 RR 隔离级别下使用。用于解决幻读问题。
+
+## insert 的时候会写哪些 log / 日志写入顺序
+
+1. 事务开始，分配事务 ID
+2. 写入 Undo log：记录修改前的数据（对于 insert 是空值）
+3. 修改数据页：在内存中执行插入操作
+4. 写入 Redo log buffer：记录数据页的变更
+5. 写入 binlog：在事务提交之前记录逻辑操作
+6. 两阶段提交：
+   prepare 阶段： 将 redo log 标记为准备提交
+   commit 阶段：先写 binlog，再将 redo log 标记为已提交
+7. 刷盘：将 redo log 和 binlog 持久化
+8. 数据文件更新：将数据页异步刷新到磁盘
+
+Undo log：innodb 层面的 log，记录了修改之前的数据
+Redo log：innodb 层面的 log，记录了在某个数据页上做什么修改
+binlog：mysql server 层面的 log，记录每个语句的原始逻辑，用于数据备份

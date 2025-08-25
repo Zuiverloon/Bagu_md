@@ -92,6 +92,202 @@ TCP 连接由 4 元组决定{local IP, local port, remote IP, remote port}
 
 现实中，一般的 linux 服务器可以维护 10w-1m，windows 一般小于 50w
 
+## API 限流算法
+
+### 固定窗口限流算法
+
+首先维护一个计数器，将单位时间段当做一个窗口，计数器记录这个窗口接收请求的次数。  
+当次数少于限流阀值，就允许访问，并且计数器+1  
+当次数大于限流阀值，就拒绝访问。  
+当前的时间窗口过去之后，计数器清零。
+
+```java
+  /**
+     * 固定窗口时间算法
+     * @return
+     */
+    boolean fixedWindowsTryAcquire() {
+        long currentTime = System.currentTimeMillis();  //获取系统当前时间
+        if (currentTime - lastRequestTime > windowUnit) {  //检查是否在时间窗口内
+            counter = 0;  // 计数器清0
+            lastRequestTime = currentTime;  //开启新的时间窗口
+        }
+        if (counter < threshold) {  // 小于阀值
+            counter++;  //计数器加1
+            return true;
+        }
+
+        return false;
+    }
+```
+
+### 滑动窗口限流算法
+
+滑动窗口限流解决固定窗口临界值的问题。它将单位时间周期分为 n 个小周期，分别记录每个小周期内接口的访问次数，并且根据时间滑动删除过期的小周期。
+
+```java
+ /**
+     * 单位时间划分的小周期（单位时间是1分钟，10s一个小格子窗口，一共6个格子）
+     */
+    private int SUB_CYCLE = 10;
+
+    /**
+     * 每分钟限流请求数
+     */
+    private int thresholdPerMin = 100;
+
+    /**
+     * 计数器, k-为当前窗口的开始时间值秒，value为当前窗口的计数
+     */
+    private final TreeMap<Long, Integer> counters = new TreeMap<>();
+
+   /**
+     * 滑动窗口时间算法实现
+     */
+    boolean slidingWindowsTryAcquire() {
+        long currentWindowTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) / SUB_CYCLE * SUB_CYCLE; //获取当前时间在哪个小周期窗口
+        int currentWindowNum = countCurrentWindow(currentWindowTime); //当前窗口总请求数
+
+        //超过阀值限流
+        if (currentWindowNum >= thresholdPerMin) {
+            return false;
+        }
+
+        //计数器+1
+        counters.get(currentWindowTime)++;
+        return true;
+    }
+
+   /**
+    * 统计当前窗口的请求数
+    */
+    private int countCurrentWindow(long currentWindowTime) {
+        //计算窗口开始位置
+        long startTime = currentWindowTime - SUB_CYCLE* (60s/SUB_CYCLE-1);
+        int count = 0;
+
+        //遍历存储的计数器
+        Iterator<Map.Entry<Long, Integer>> iterator = counters.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Long, Integer> entry = iterator.next();
+            // 删除无效过期的子窗口计数器
+            if (entry.getKey() < startTime) {
+                iterator.remove();
+            } else {
+                //累加当前窗口的所有计数器之和
+                count =count + entry.getValue();
+            }
+        }
+        return count;
+    }
+```
+
+### 漏桶算法
+
+漏桶算法面对限流，就更加的柔性，不存在直接的粗暴拒绝。
+
+它的原理很简单，可以认为就是注水漏水的过程。往漏桶中以任意速率流入水，以固定的速率流出水。当水超过桶的容量时，会被溢出，也就是被丢弃。因为桶容量是不变的，保证了整体的速率。
+
+```java
+/**
+     * 每秒处理数（出水率）
+     */
+    private long rate;
+
+    /**
+     *  当前剩余水量
+     */
+    private long currentWater;
+
+    /**
+     * 最后刷新时间
+     */
+    private long refreshTime;
+
+    /**
+     * 桶容量
+     */
+    private long capacity;
+
+    /**
+     * 漏桶算法
+     * @return
+     */
+    boolean leakybucketLimitTryAcquire() {
+        long currentTime = System.currentTimeMillis();  //获取系统当前时间
+        long outWater = (currentTime - refreshTime) / 1000 * rate; //流出的水量 =(当前时间-上次刷新时间)* 出水率
+        long currentWater = Math.max(0, currentWater - outWater); // 当前水量 = 之前的桶内水量-流出的水量
+        refreshTime = currentTime; // 刷新时间
+
+        // 当前剩余水量还是小于桶的容量，则请求放行
+        if (currentWater < capacity) {
+            currentWater++;
+            return true;
+        }
+
+        // 当前剩余水量大于等于桶的容量，限流
+        return false;
+    }
+```
+
+### 令牌桶(token bucket)
+
+面对突发流量的时候，我们可以使用令牌桶算法限流。
+
+有一个令牌管理员，根据限流大小，定速往令牌桶里放令牌。  
+如果令牌数量满了，超过令牌桶容量的限制，那就丢弃。  
+系统在接受到一个用户请求时，都会先去令牌桶要一个令牌。如果拿到令牌，那么就处理这个请求的业务逻辑；  
+如果拿不到令牌，就直接拒绝这个请求。
+
+```java
+   /**
+     * 每秒处理数（放入令牌数量）
+     */
+    private long putTokenRate;
+
+    /**
+     * 最后刷新时间
+     */
+    private long refreshTime;
+
+    /**
+     * 令牌桶容量
+     */
+    private long capacity;
+
+    /**
+     * 当前桶内令牌数
+     */
+    private long currentToken = 0L;
+
+    /**
+     * 漏桶算法
+     * @return
+     */
+    boolean tokenBucketTryAcquire() {
+
+        long currentTime = System.currentTimeMillis();  //获取系统当前时间
+        long generateToken = (currentTime - refreshTime) / 1000 * putTokenRate; //生成的令牌 =(当前时间-上次刷新时间)* 放入令牌的速率
+        currentToken = Math.min(capacity, generateToken + currentToken); // 当前令牌数量 = 之前的桶内令牌数量+放入的令牌数量
+        refreshTime = currentTime; // 刷新时间
+
+        //桶里面还有令牌，请求正常处理
+        if (currentToken > 0) {
+            currentToken--; //令牌数量-1
+            return true;
+        }
+
+        return false;
+    }
+```
+
+## select, poll, epoll 的区别
+
+他们都是用来监听多个 socket 读写事件
+select: 最大连接数有限制，一般是 1024（可增大不建议），事件通知方式为轮询所有 fd，每次调用需复制整个 fd 数组
+poll：最大连接数理论上没有限制，事件通知方式为轮询所有 fd，每次调用需复制整个 fd 数组
+epoll：最大连接数理论上没有限制，事件通知方式为回调通知，只需注册一次即可
+
 # OS
 
 ## 进程和线程的区别
@@ -139,11 +335,13 @@ LRU：最近最久未使用。实现为 index 索引+双向链表
 最优置换(Optimal)：置换最迟访问的页面。不可能实现，因为系统无法预测未来  
 先进先出(FIFO)：可能置换掉有用的页
 
-## 页表
+## 虚拟内存 / 物理内存 / 页表
 
-store the mapping between virtual address and physical address.
+虚拟内存：os 通过 MMU 模拟出来的抽象地址空间，程序认为自己有连续且充足的空间
+物理内存：真实存在的硬件内存，是 CPU 可直接访问的
+页表：将虚拟地址映射到物理地址，每个进程有自己的页表，如果页不在内存中，则触发缺页中断。一般 CPU 先查 TLB（Translation Lookaside buffer），再查页表
 
-## 图灵完备（MSHF 傻逼公司）
+## 图灵完备
 
 一系列数据操作的规则（如指令集，编程语言，细胞自动机）可用来模拟单带自动机，那么他是图灵完备的。
 

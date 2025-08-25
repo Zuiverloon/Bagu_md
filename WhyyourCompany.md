@@ -40,5 +40,6 @@ airwallex use case: company pay to freelance globally, enterprise level payment;
 **questions to ask**  
 How many people in SH office?  
 What's the level hierarchy of SDE?  
+work from office or hybrid?
 How do we do evaluation on engineers? annual review or quarterly review?  
 What does financial platform do?

@@ -75,7 +75,7 @@ acks	// Message durability level (0, 1, or all)
 
 ```
 group.id	// Consumer group identifier
-auto.offset.reset	// Behavior when no offset is found (earliest, latest)
+auto.offset.reset	// Behavior when no offset is found (earliest, latest,none(if no offset, give error)), if already having offset, then start from offset
 enable.auto.commit	// Whether to auto-commit offsets
 max.poll.records	// Maximum number of records returned in a single poll
 key.deserializer / value.deserializer	// Classes to deserialize keys and values
@@ -98,3 +98,5 @@ bin/kafka-console-consumer.sh --bootstrap-server <broker> --topic <topic-name> -
 
 
 ```
+
+## kafka mirror
