@@ -101,6 +101,9 @@ redis 127.0.0.1:6379> ZRANGEBYSCORE runoob 0 1000
 3) "redis"
 ```
 
+hashmap 用于快速查找某个元素的分数
+跳表按分数排序元素，支持范围查询
+
 ## 发布订阅
 
 生产者可以给 channel 发送消息，消费者可以从 channel 拿到消息
