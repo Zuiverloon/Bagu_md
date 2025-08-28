@@ -193,13 +193,30 @@ HashTable:类似于 hashmap，不支持 null 为 key 且线程安全(synchronize
 Con:volatile 关键词(操作后会被别的线程立即看见)，可以并行操作不同的 bucket，如果是同一个 bucket 就加锁控制  
 TreeMap:也是存键值对，红黑树，排序遍历较快
 
-## 锁
+## 锁 synchronized vs reentrantlock
 
-control the concurrent access to an object.
+限制并发访问
 
-synchronized：关键字(与锁的功能类似但是不显式创建锁，加锁)，不可中断，非公平锁  
-如果写 synchronized(this)或者把方法标记为 synchronized，会防止并发修改这个类上的所有变量，不太好，建议创建独立的 monitor
-reentrant：类，调用 lock，unlock 实现加锁与释放可中断(lockinterrupt()方法可响应中断)，可公平(公平的话会看队列中是否有其他线程)
+### synchronized
+
+关键字(与锁的功能类似但是不显式创建锁，加锁)，不可中断，非公平锁  
+同步实例方法 `public synchronized void method() {}	` 锁的是当前实例对象 this  
+同步静态方法 `public static synchronized void method() {}	` 锁的是当前类的 Class 对象  
+同步代码块 `synchronized(obj) { /* code */ }	` 锁的是指定的对象 obj
+**底层原理**：
+synchronized 方法在字节码中会被标记为 ACC_SYNCHRONIZED
+同步代码块会被编译为 monitorenter 和 monitorexit 指令
+每个对象在 JVM 中都有一个监视器锁（Monitor）
+锁的升级单向的：从无锁 → 偏向锁（锁会偏向第一个获得它的线程。如果一直没有被其他线程获取，则第一个线程就不需要同步） → 轻量级锁（自旋） → 重量级锁（阻塞），不会降级  
+可重入，非公平
+
+### reentrantlock
+
+调用 lock，unlock 实现加锁与释放  
+可中断(lockinterrupt()方法，如果出现中断，会抛出异常)  
+支持公平/非公平(公平的话会看队列中是否有其他线程)  
+tryLock 尝试获取锁  
+条件变量支持，类似 wait/notify
 
 ## 死锁
 
@@ -446,7 +463,7 @@ Callable 返回 future，且若有异常在 Future.get()时会抛出异常，通
 1. 最大线程数(max):如果队列满了，有新任务，创建新线程
 1. 存活时间(keepalivetime)及单位:超过存活时间并且线程数大于核心线程数就 kill
 1. 等待队列(waitingqueue):若线程数等于核心线程数，丢进队列，等到有空闲线程了就取第一个任务执行
-1. 拒绝策略(abortstrategy):一般的，丢弃新任务/最老任务/ 由提交者线程执行/抛出异常
+1. 拒绝策略(abortstrategy):当核心线程满了、队列满了、最大线程数到了，就触发一般的，丢弃新任务/最老任务/ 由提交者线程执行/抛出异常
 1. 线程工厂:接受 runnable 对象，封装到 Thread 类中
 
 ### 创建线程池的两种方法
@@ -478,10 +495,92 @@ Callable 返回 future，且若有异常在 Future.get()时会抛出异常，通
 
 1.  调用 threadpoolexecutor 创建自定义所有参数的线程池
 
+```java
+new ThreadPoolExecutor(corePoolSize, maximumPoolSize, ...)
+```
+
 ### 线程池提交任务的两种方法 execute&submit
 
 1. execute 方法提交不需要返回值的任务，无法判断是否执行完成
 2. submit 方法提交需要返回值的任务，返回一个 Future 对象，通过 Future.get 来判断是否执行完成(get 会阻塞直到执行完成)
+
+### 自己写一个线程池
+
+```java
+import java.util.LinkedList;
+
+public class TaskQueue {
+    private final LinkedList<Runnable> tasks = new LinkedList<>();
+
+    public synchronized void put(Runnable task) {
+        tasks.add(task);
+        notify(); // 唤醒等待的工作线程
+    }
+
+    public synchronized Runnable take() throws InterruptedException {
+        while (tasks.isEmpty()) {
+            wait(); // 队列为空时等待
+        }
+        return tasks.removeFirst();
+    }
+}
+
+public class Worker extends Thread {
+    private final TaskQueue queue;
+    private volatile boolean running = true;
+
+    public Worker(TaskQueue queue) {
+        this.queue = queue;
+    }
+
+    @Override
+    public void run() {
+        while (running) {
+            try {
+                Runnable task = queue.take();
+                task.run();
+            } catch (InterruptedException e) {
+                // 线程被中断，退出循环
+                running = false;
+            }
+        }
+    }
+
+    public void shutdown() {
+        running = false;
+        this.interrupt(); // 中断等待状态
+    }
+}
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MyThreadPool {
+    private final TaskQueue queue = new TaskQueue();
+    private final List<Worker> workers = new ArrayList<>();
+
+    public MyThreadPool(int numThreads) {
+        for (int i = 0; i < numThreads; i++) {
+            Worker worker = new Worker(queue);
+            workers.add(worker);
+            worker.start();
+        }
+    }
+
+    public void submit(Runnable task) {
+        queue.put(task);
+    }
+
+    public void shutdown() {
+        for (Worker worker : workers) {
+            worker.shutdown();
+        }
+    }
+}
+
+
+
+```
 
 ### 内存模型
 
@@ -585,7 +684,18 @@ future.onTimeout(1,TimeUnits.SECOND)//如果需要有一个超时时间,并不�
 ## volatile 关键字
 
 如果一个线程修改了数据，别的线程可以立即看见
-不依赖 cache 中的数据，而是每次都去内存查这个元素
+禁止线程对变量的本地缓存，强制从主内存读取最新值
+
+## transient 关键字
+
+标记某个字段在对象序列化时不被保存
+
+```java
+class User implements Serializable {
+    private String username;
+    private transient String password; // 不会被序列化
+}
+```
 
 ## wait notify
 
