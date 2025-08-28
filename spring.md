@@ -42,6 +42,105 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 **beanfactory**:spring IOC 容器的根接口，可以实例化 bean，建立依赖等  
 **factorybean**：用来自定义一个 bean 的实例化过程。spring 中有两种 bean，一种是普通 bean，一种是工厂 bean。工厂 bean 可以用来生成 bean，会向容器中注入两个 bean(一个本身，一个 getObject 返回的 bean)。当调用 getbean 获取工厂 bean 时，返回的是工厂产生的 bean，如果要获取工厂 bean 本身，要加一个&号如"&customFactoryBean"
 
+```java
+//简单的bean factory
+import java.util.HashMap;
+import java.util.Map;
+
+public class SimpleBeanFactory implements BeanFactory {
+
+    // 存储 bean 的定义（类名 → Class）
+    private Map<String, Class<?>> beanDefinitions = new HashMap<>();
+
+    // 存储单例实例（类名 → 实例）
+    private Map<String, Object> singletonBeans = new HashMap<>();
+
+    // 注册 bean 定义
+    public void registerBean(String name, Class<?> clazz) {
+        beanDefinitions.put(name, clazz);
+    }
+
+    // 获取 bean 实例
+    @Override
+    public Object getBean(String name) {
+        // 如果已存在单例，直接返回
+        if (singletonBeans.containsKey(name)) {
+            return singletonBeans.get(name);
+        }
+
+        // 否则创建新实例
+        Class<?> clazz = beanDefinitions.get(name);
+        if (clazz == null) {
+            throw new RuntimeException("No bean named " + name);
+        }
+
+        try {
+            Object instance = clazz.getDeclaredConstructor().newInstance();
+            singletonBeans.put(name, instance);
+            return instance;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create bean: " + name, e);
+        }
+    }
+}
+
+```
+
+```java
+// 简单的factory bean
+public class Car {
+    private String brand;
+    private int maxSpeed;
+
+    public Car(String brand, int maxSpeed) {
+        this.brand = brand;
+        this.maxSpeed = maxSpeed;
+    }
+
+    public void drive() {
+        System.out.println("Driving a " + brand + " at " + maxSpeed + " km/h");
+    }
+}
+public interface FactoryBean<T> {
+    T getObject();              // 返回实际对象
+    Class<?> getObjectType();   // 返回对象类型
+    boolean isSingleton();      // 是否单例
+}
+public class CarFactoryBean implements FactoryBean<Car> {
+    private String brand;
+    private int maxSpeed;
+
+    // 可通过 setter 注入配置
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public void setMaxSpeed(int maxSpeed) {
+        this.maxSpeed = maxSpeed;
+    }
+
+    @Override
+    public Car getObject() {
+        // 复杂初始化逻辑可以放在这里
+        return new Car(brand, maxSpeed);
+    }
+
+    @Override
+    public Class<?> getObjectType() {
+        return Car.class;
+    }
+
+    @Override
+    public boolean isSingleton() {
+        return true;
+    }
+}
+
+
+
+
+```
+
 ## spring 容器启动
 
 1. 扫描读取所有 bean 配置信息，放到 bean 定义 map 中
@@ -51,19 +150,8 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 
 ## bean 生命周期(5.x)
 
-生产:
+BeanDefinition → 实例化 → 属性填充 → 初始化 → BeanPostProcessor → 注册单例
 
-1. 加载 bean 定义，放在 beanDefinitionMap 中
-2. 根据 map 调用 createBean
-
-   1. 构造对象(createBeanInstance)，通过 bean class 属性找构造函数(如果有多个，优先拿 autowired 的，无法判断就报错) / 到单例池中找 bean 作为构造参数
-   2. 填充属性(populateBean)，三级缓存
-   3. 初始化实例(initializeBean)
-   4. 注册销毁，注册上述的 bean 就可以在销毁时执行 destroy
-
-3. 放入单例池
-
-使用  
 销毁
 
 1. 先执行前处理器执行所有@predestroy 方法
@@ -80,7 +168,16 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 ### 循环依赖 三级缓存
 
 一级缓存：初始化完的 bean 可用的 bean 放在一级缓存中  
-二级缓存，三级缓存：如果在初始化的时候如果需要别的 bean，先去一级缓存中找，找不到或者对象正在创建中，就去二级缓存中找，二级找不到就去三级找，三级找到了移入二级。二级里面放的是未填充属性的 bean，三级放的是 bean 工厂。加入三级缓存的前提是执行了构造器，所以如果是构造器注入的循环，无法解决。
+二级缓存：存储“半成品” Bean（已实例化但未注入属性）  
+三级缓存：存储 Bean 的创建工厂（通常用于生成代理对象，如 AOP）  
+Spring 开始创建 Bean A，发现它依赖 Bean B。  
+Bean A 被实例化（构造函数执行），但尚未注入属性，此时将其工厂方法放入三级缓存。  
+Spring 开始创建 Bean B，发现它依赖 Bean A  
+Spring 在三级缓存中找到 Bean A 的工厂方法，调用它生成一个“早期引用”（可能是代理对象），放入二级缓存。  
+Bean B 得以注入 Bean A 的引用并完成创建。  
+回到 Bean A，完成属性注入和初始化，最终放入一级缓存。
+ps：构造器注入的循环依赖无法解决  
+ps：涉及 AOP 时必须使用三级缓存：否则注入的是原始对象而不是代理对象，会导致行为不一致。
 
 ### lazy initialize bean
 
@@ -94,6 +191,12 @@ ioc 容器创建的实例，属性包括(name,class,scope,constructor args,prope
 4. session 一个 http session 请求一个  
    如何指定？xml 或注解@Scope 指定
 
+## 自动装配的原理
+
+@SpringBootApplication
+└── @EnableAutoConfiguration 开启自动装配 + AutoConfigurationImportSelector 读取 spring.factories，加载自动配置类
+└── 条件注解判断是否注入 Bean
+
 ## AOP(面向切面编程)
 
 aspect oriented programming, we can add additional behavior to methods without modifying the body of the method. By @Before, @After. 通过动态代理实现(dynamic proxy)
@@ -105,8 +208,28 @@ aspect oriented programming, we can add additional behavior to methods without m
 aop 是动态代理，详见 java 动态代理部分
 
 advice 通知/增强:描述了增强如何执行
-join point 连接点：a point where can be inserted a aspect。java 中就是方法的调用
+join point 连接点：a point where can be inserted a aspect。java 中就是方法的调用,spring 只支持方法执行作为连接点
 pointcut 切点：where to insert a advice(before a function / after a function)
+
+```java
+@Pointcut("execution(* com.example.service.*.*(..))")
+public void serviceMethods() {}
+
+@Aspect
+@Component
+public class LoggingAspect {
+
+    @Pointcut("execution(* com.example.service.*.*(..))")
+    public void logPointcut() {}
+
+    @Before("logPointcut()")
+    public void beforeLog(JoinPoint joinPoint) {
+        System.out.println("Before method: " + joinPoint.getSignature());
+    }
+}
+这里的 LoggingAspect 就是一个切面，它在指定的方法执行前打印日志。
+```
+
 aspect 切面：advice+pointcut
 切点表达式：execution(执行某方法)，within(在某个包内)，annotation(有某个注解)
 
@@ -163,7 +286,7 @@ txManager.commit(status);
 
 ```
 
-**事务传播行为**有 7 种，默认是 REQUIRED 传播机制。
+**事务传播行为**有 7 种，默认是 REQUIRED 传播机制。1M3N2R1S
 
 1. REQUIRED：如果当前存在事务，则加入该事务；如果当前不存在事务，则创建一个新的事务；
 1. SUPPORTS：如果当前存在事务，则加入该事务；如果当前不存在事务，则以非事务的方式继续运行；
