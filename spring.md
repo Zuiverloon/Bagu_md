@@ -141,12 +141,21 @@ public class CarFactoryBean implements FactoryBean<Car> {
 
 ```
 
-## spring 容器启动
+## spring 容器启动 及 自动装配机制
 
-1. 扫描读取所有 bean 配置信息，放到 bean 定义 map 中
-2. 实例化 bean
-3. 将 bean 放入容器
-4. 运行时获取 bean
+1. 创建容器对象
+1. 读取配置扫描组建
+1. 注册 bean 定义
+1. 实例化 bean
+1. 依赖注入
+1. 初始化 bean
+1. 完成容器启动
+
+**自动装配的原理**
+
+@SpringBootApplication
+└── @EnableAutoConfiguration 开启自动装配 + AutoConfigurationImportSelector 读取 spring.factories，加载自动配置类
+└── 条件注解判断是否注入 Bean
 
 ## bean 生命周期(5.x)
 
@@ -190,12 +199,6 @@ ps：涉及 AOP 时必须使用三级缓存：否则注入的是原始对象而�
 3. request 一个 http 请求一个
 4. session 一个 http session 请求一个  
    如何指定？xml 或注解@Scope 指定
-
-## 自动装配的原理
-
-@SpringBootApplication
-└── @EnableAutoConfiguration 开启自动装配 + AutoConfigurationImportSelector 读取 spring.factories，加载自动配置类
-└── 条件注解判断是否注入 Bean
 
 ## AOP(面向切面编程)
 

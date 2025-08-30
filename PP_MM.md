@@ -31,6 +31,8 @@ fetch live data from datadog, or periodically run cron jobs to fetch metrics/cou
 4. 聚合分组查询效率高
 
 同类的有 clickhouse，但是实时性不如 druid
+用 tranquilizer 发送单条数据，自动处理分片，支持异步、重试、回调
+用 curator 当作 zookeeper，
 
 ## 项目难点
 
