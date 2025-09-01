@@ -190,7 +190,7 @@ copyonwrite 是先复制，往新的 array 里面加，然后再把引用指向�
 
 HashMap:1.8 以前是数组(桶)+链表(并发扩容会导致死循环，插入是头插，扩容会让链表反转)，1.8 以后是数组+红黑树，默认 16 个桶，元素数量超过 loadfactor 0.75\*桶 就扩容一倍  
 HashTable:类似于 hashmap，不支持 null 为 key 且线程安全(synchronized)  
-Con:volatile 关键词(操作后会被别的线程立即看见)，可以并行操作不同的 bucket，如果是同一个 bucket 就加锁控制  
+Con:volatile 关键词(操作后会被别的线程立即看见)，可以并行操作不同的 bucket，如果是同一个 bucket 就加锁控制，只有写会加锁，读不加锁通过 volatile 保证看见最新的修改  
 TreeMap:也是存键值对，红黑树，排序遍历较快
 
 ## 锁 synchronized vs reentrantlock
@@ -716,6 +716,26 @@ compare and swap,CAS(V,O,N)核心思想为：若当前变量实际值 V 与期�
 
 在内存中维护了多个 counter，不同的线程更新不同的 counter，当获取具体值的时候，把所有 counter 加起来
 
+## OOM 如何排查
+
+1. 识别 OOM 类型：可能的 OOM 类型 Java heap space（堆溢出），GC overhead limit exceeded（gc 频繁但是效果差），PermGen space（JDK7 及以前）或 Metaspace（JDK8+）（类元信息溢出，动态加载的类太多），unable to create new native thread（线程数过多）
+2. 查看日志，启动堆转储
+
+```
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath=/path/to/dump.hprof
+```
+
+3. 使用分析工具，看哪些对象占用内存过多，是否存在内存泄漏，死循环
+4. 检查代码逻辑
+5. 调整 jvm 参数
+
+```
+-Xms512m -Xmx2048m #增加堆大小
+-XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m #设置元空间大小（JDK8+）
+-Xss256k #控制线程栈大小
+```
+
 ## 多线程打印 1-100
 
 用 synchronized，需要 wait/notify
@@ -806,5 +826,14 @@ private static int counter = 0;
     }
 
 ```
+
+## Threadlocal
+
+每个 thread object 里面维护了一个 threadlocalmap，key 是 threadlocal，使用开放地址法解决 hash 冲突  
+由于 key 是弱引用，value 是强引用，如果 key(threadlocal)被 GC 回收，key 就变成 null 但是 value 仍存在，就内存泄漏了，解决方法：1. 使用完毕后调用 remove， 2. 将 threadlocal 定义为 static final，延长生命周期
+
+## 内存泄漏
+
+分配的内存未被释放
 
 ## objectMapper
