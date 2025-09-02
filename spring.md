@@ -151,11 +151,16 @@ public class CarFactoryBean implements FactoryBean<Car> {
 1. 初始化 bean
 1. 完成容器启动
 
-**自动装配的原理**
+**spring 自动装配**
+扫描所有 bean 定义
+autowird 字段表示需要自动注入
+componentscan 注解将 component，service，repository 全注册并实例化
+调用后处理器
 
-@SpringBootApplication
-└── @EnableAutoConfiguration 开启自动装配 + AutoConfigurationImportSelector 读取 spring.factories，加载自动配置类
-└── 条件注解判断是否注入 Bean
+**springboot 自动装配的原理**
+
+@SpringBootApplication 注解包含三个注解，@EnableAutoConiguration， @Componentscan， @Configuration
+@EnableAutoConfiguration 开启自动装配 + AutoConfigurationImportSelector 读取 spring.factories，加载自动配置类@Configuration
 
 ## bean 生命周期(5.x)
 
@@ -176,14 +181,14 @@ BeanDefinition → 实例化 → 属性填充 → 初始化 → BeanPostProcesso
 
 ### 循环依赖 三级缓存
 
-一级缓存：初始化完的 bean 可用的 bean 放在一级缓存中  
-二级缓存：存储“半成品” Bean（已实例化但未注入属性）  
-三级缓存：存储 Bean 的创建工厂（通常用于生成代理对象，如 AOP）  
+一级缓存 singletonObjects：初始化完的 bean 可用的 bean 放在一级缓存中  
+二级缓存 earlySingletonObjects：存储“半成品” Bean（已实例化但未注入属性）  
+三级缓存 singletonFactories：存储 Bean 的创建工厂（通常用于生成代理对象，如 AOP）  
 Spring 开始创建 Bean A，发现它依赖 Bean B。  
 Bean A 被实例化（构造函数执行），但尚未注入属性，此时将其工厂方法放入三级缓存。  
 Spring 开始创建 Bean B，发现它依赖 Bean A  
-Spring 在三级缓存中找到 Bean A 的工厂方法，调用它生成一个“早期引用”（可能是代理对象），放入二级缓存。  
-Bean B 得以注入 Bean A 的引用并完成创建。  
+Spring 在一级二级都找不到 A，三级缓存中找到 Bean A 的工厂方法，调用它生成一个“早期引用”（可能是代理对象），放入 A 二级缓存，将 A 工厂移除三级。  
+Bean B 得以注入 Bean A 的引用并完成创建放入一级。  
 回到 Bean A，完成属性注入和初始化，最终放入一级缓存。
 ps：构造器注入的循环依赖无法解决  
 ps：涉及 AOP 时必须使用三级缓存：否则注入的是原始对象而不是代理对象，会导致行为不一致。
@@ -205,14 +210,12 @@ ps：涉及 AOP 时必须使用三级缓存：否则注入的是原始对象而�
 aspect oriented programming, we can add additional behavior to methods without modifying the body of the method. By @Before, @After. 通过动态代理实现(dynamic proxy)
 对已有的属性，方法做增强(advice)，业务无关的代码与业务接耦。通过切面的方式调用代码（统一的，在方法执行前(前后叫做 joinpoint，被增强的规则叫做切点)做一系列操作，在方法执行后做一系列操作）如打日志操作，校验参数(Before+传参)，鉴权，可以不写在方法中而是通过 AOP 实现
 
-@Before @After 注解，统称为 advice
-
 实现机制为 java 代理，生成了代理类
 aop 是动态代理，详见 java 动态代理部分
 
-advice 通知/增强:描述了增强如何执行
-join point 连接点：a point where can be inserted a aspect。java 中就是方法的调用,spring 只支持方法执行作为连接点
-pointcut 切点：where to insert a advice(before a function / after a function)
+advice 通知/增强:描述了增强如何执行， @Before @After 注解，统称为 advice
+join point 连接点：程序执行过程中可以插入切面逻辑的点。java 中就是方法的调用,spring aop 只支持方法执行作为连接点
+pointcut 切点：用来定义哪些连接点需要被织入增强逻辑。通常通过表达式定义，比如匹配某个包下的所有方法
 
 ```java
 @Pointcut("execution(* com.example.service.*.*(..))")
@@ -233,7 +236,7 @@ public class LoggingAspect {
 这里的 LoggingAspect 就是一个切面，它在指定的方法执行前打印日志。
 ```
 
-aspect 切面：advice+pointcut
+aspect 切面：advice+pointcut， @Aspect 注解
 切点表达式：execution(执行某方法)，within(在某个包内)，annotation(有某个注解)
 
 ## 事务

@@ -24,12 +24,15 @@ https://zhuanlan.zhihu.com/p/74063251
 
 ## 发送数据
 
-1. 生产者从集群获取分区 leader
+1. 生产者从集群获取 broker leader
 1. 将消息发给 leader
 1. leader 写入本地文件
-1. follower 从 leader 那里 pull 消息
-1. follower 将消息写完后向 leader 发送 ACK
-1. leader 收到所有副本的 ack 后向生产者发 ack
+
+如果有应答机制
+
+4. follower 从 leader 那里 pull 消息
+5. follower 将消息写完后向 leader 发送 ACK
+6. leader 收到所有副本的 ack 后向生产者发 ack
 
 **如何保证消息不丢？**
 ack 应答机制。生产者生产时，可以设置参数(0,1,all)确认 kafka 是否收到消息。
@@ -40,7 +43,8 @@ ack 应答机制。生产者生产时，可以设置参数(0,1,all)确认 kafka 
 
 ## 保存消息
 
-每个 partition 包括多个 segment 文件，segment 文件中包含 index 文件(存索引)，log 文件(存消息)，文件名表示分段(00000.index 00010.index 表示第一个存了 10 条消息)  
+采用分区日志系统
+每个 partition 包括多个 segment 文件，segment 文件中包含 index 文件(存索引，但不是每条偏移量都存，而是每过一定字节数，记录一个)，log 文件(存消息)，文件名表示分段(00000.index 00010.index 表示第一个存了 10 条消息)  
 消息结构包括：
 
 1. offset(8b,确定每条消息在 partition 的位置)
@@ -53,7 +57,7 @@ ack 应答机制。生产者生产时，可以设置参数(0,1,all)确认 kafka 
 
 ## 消费消息
 
-消费者主动去拉取消息
+消费者主动去拉取消息  
 多个消费者消费不同分区的消息，不会消费同一分区的消息(建议消费者数量与分区数量一致)  
 **如何查找 id 为 30006 的消息**
 二分查找确定是哪个 segment，index 是稀疏的，也需要二分查找找到比 id 小的最大的索引，最后去 log 中按顺序找  
@@ -62,6 +66,11 @@ kafka 会维护每个消费者的 offset
 ### 如果消费者离开，发生什么？
 
 rebalance：把分区重新分配给所有消费者，当新的消费者消费某个 partition 时，会从最新的 offset 开始防止重复
+
+## 为什么 kafka 不是推消息给消费者
+
+速率难控制，容易消息堆积/消费者崩溃  
+状态维护复杂：需要跟踪每个消费者的状态
 
 ### Producer Configuration Properties
 
@@ -109,7 +118,7 @@ bin/kafka-console-consumer.sh --bootstrap-server <broker> --topic <topic-name> -
 4. 外部存储偏移量而不是 kafka 内部存储
 5. 消费端做幂等，，使用消息 ID 判断是否已经处理
 
-## 为什么 kafka 不是推消息给消费者
+## broker 宕机的影响
 
-速率难控制，容易消息堆积/消费者崩溃  
-状态维护复杂：需要跟踪每个消费者的状态
+对生产者：数据可能丢失，除非消息同步到所有副本（ack=all）  
+对消费者：消费者只能从 leader 读取，leader 宕机了会选举新的 leader，消费者会重连，没有副本选为 leader 就停止消费

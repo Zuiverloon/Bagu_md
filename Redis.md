@@ -32,8 +32,21 @@ redis 127.0.0.1:6379> GET runoob
 "菜鸟教程"
 ```
 
-## hash（小型用 Ziplist，大型哟个 HashTale）
+string 的底层存储由 SDS Simple Dynamic String 实现，根据内容自动选择 int，embstr(<=44B，且只读，redisObject 与 SDS 连续分配)，raw 编码(>44B，redisObject 与 SDS 分开存放)，获取长度高效，可动态扩容
 
+```c
+struct __attribute__ ((__packed__)) sdshdr8 {
+    uint8_t len;      // 已使用长度
+    uint8_t alloc;    // 分配的总长度
+    unsigned char flags; // 类型标志
+    char buf[];       // 实际字符串内容
+};
+
+```
+
+## hash（小型用 Ziplist，大型用 HashTale）
+
+ziplist 是紧凑的双向链表，但是是连续的内存块，没有指针指向下一个节点
 键值对集合，用于存储对象，每个 hash 可以存 2\*\*32-1 个键值对
 
 ```
@@ -137,7 +150,7 @@ redis 一次可以执行多个事务
 ## 缓存穿透
 
 数据既不在 db 也不在 redis，导致每次都到 db  
-解决办法：1. 空对象也缓存， 2. 布隆过滤器，拦截肯定不存在的 key
+解决办法：1. 空对象也缓存， 2. 布隆过滤器（多个 hash+位数组，进行多次 hash，如果有一个 0，肯定不存在，但是会误判存在），拦截肯定不存在的 key
 
 ## **缓存击穿**
 
@@ -149,7 +162,7 @@ redis 一次可以执行多个事务
 
 ## **持久机制**（RDB / AOF）
 
-1. 写入 RDB 文件，缺点：每次都要写所有
+1. 写入 RDB 文件，快照，二进制，定时触发，对性能影响低因为是后台 fork 子进程，缺点：每次都要写所有
 1. AOF 持久化，把执行过的命令都写入文件，先把命令写在 aof buf 中，用子进程定时写 aof，并且重写 aof 优化冗余的指令。但会遇到新来的命令修改数据的问题，因此需要一个 aofrewritebuf，每次重写完再把 aofrewritebuf 中的内容写入
 
 ## 分布式锁

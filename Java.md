@@ -184,13 +184,13 @@ size >= elementData 时，扩容。每次扩 1.5 倍
 同时添加元素，导致丢失
 同时修改 size，导致覆盖
 
-copyonwrite 是先复制，往新的 array 里面加，然后再把引用指向新的 array，读写分离，并发读不加锁，写的时候会加锁
+copyonwrite 是每次写先复制，往新的 array 里面加，然后再把引用指向新的 array，读写分离，并发读不加锁，写的时候会加锁，适合读频繁的场景
 
 ## HashMap && HashTable && ConcurrentHashMap && TreeMap
 
 HashMap:1.8 以前是数组(桶)+链表(并发扩容会导致死循环，插入是头插，扩容会让链表反转)，1.8 以后是数组+红黑树，默认 16 个桶，元素数量超过 loadfactor 0.75\*桶 就扩容一倍  
 HashTable:类似于 hashmap，不支持 null 为 key 且线程安全(synchronized)  
-Con:volatile 关键词(操作后会被别的线程立即看见)，可以并行操作不同的 bucket，如果是同一个 bucket 就加锁控制，只有写会加锁，读不加锁通过 volatile 保证看见最新的修改  
+Con:volatile 关键词(操作后会被别的线程立即看见)，可以并行操作不同的 bucket，如果是同一个 bucket 就加锁控制，只有写会加锁，读不加锁通过 volatile 保证看见最新的修改。concurrenthashmap 和 hashmap 都在链长度大于 8，桶长度大于 64 时变为红黑树  
 TreeMap:也是存键值对，红黑树，排序遍历较快
 
 ## 锁 synchronized vs reentrantlock
@@ -637,8 +637,8 @@ GC Roots → 灰色
 **为什么使用三色标记**：可以不用 stw（暂停所有用户线程），GC 和用户线程可以并发
 **三色标记的问题**：
 
-1. 对象本应回收，但是被标记为黑色，要到下次 GC 才处理
-2. 对象本应存活，但是由于引用关系变化，导致被回收。解决方法：CMS 中记录黑色对象新增引用，G1 记录灰色对象原始引用
+1. 灰色对象本应回收，但是被标记为黑色，要到下次 GC 才处理
+2. 白色对象本应存活，但是由于引用关系变化，导致被回收。解决方法：CMS 中记录黑色对象新增引用，重新标记；G1 记录灰色对象原始引用，重新标记白色
 
 **常见垃圾回收算法**：
 
@@ -684,7 +684,8 @@ future.onTimeout(1,TimeUnits.SECOND)//如果需要有一个超时时间,并不�
 ## volatile 关键字
 
 如果一个线程修改了数据，别的线程可以立即看见
-禁止线程对变量的本地缓存，强制从主内存读取最新值
+不加 volatile 可能从每个线程的工作内存中读，加了 volatile 就是加了内存屏障，读写都去主内存
+禁止指令重排
 
 ## transient 关键字
 
@@ -701,6 +702,7 @@ class User implements Serializable {
 
 每个 java 变量都有这两个方法(继承自 object)，当一个线程调用 wait，就会被阻塞，等到另外的线程调用了 notify
 这两个方法的使用需要包在 synchronized(){}中
+notify 和 nofiyall 的区别在于 all 会唤醒所有线程去竞争，而 notify 只随机唤醒一个
 
 ## atomic 类
 

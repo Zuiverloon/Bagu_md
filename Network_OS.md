@@ -18,7 +18,10 @@ find ip address by domain name
 
 无状态 每次发送 HTTP 请求都认为是从不同客户端发出  
 如果要保持会话，用 cookie 和 session（作为额外的信息写在 header 中）
-原始的 HTTP 是打开 TCP，发送一个 HTTP，关闭 TCP；HTTP2 开始可复用 tcp(一个 tcp 发多个 http)
+原始的 HTTP 是打开 TCP，发送一个 HTTP，关闭 TCP；
+HTTP1.1 开始默认开启 Connection: keep-alive，复用 tcp 连接
+HTTP2 将文本转二进制，多个请求共享 tcp 连接
+HTTP3 支持 quic(UDP)协议
 
 ### request
 
@@ -52,15 +55,18 @@ CWindow：congestion control，防止网络拥堵
 
 **三次握手**：SYN -> SYN/ACK -> ACK(可携带数据)
 
-**为什么要三次握手** 防止已经失效的请求连接报文突然传到了服务器，导致错误。如果只有两次握手，一个很老的请求连接报文可能由于网络阻塞而刚刚发到服务器，服务器便会同意连接，建立连接，然后等客户端发消息，但是客户端根本没有消息要发。在三次握手模型中，只有第三次握手发送到了服务端，才是真正的建立了连接。
+**为什么要三次握手**
 
-**四次挥手**：FIN -> ACK -> FIN/ACK -> ACK
+1. 客户端没收到 SYN/ACK，导致服务端资源浪费
+2. 防止旧的 syn 传到了服务器，保证客户端相应 syn/ack 才算建立连接
+
+**四次挥手**：FIN -> ACK(客户端进入 fin_wait_2 状态) -> FIN/ACK -> ACK(客户端进入 TIME_WAIT 状态，等 2MSL 后关闭连接)
 
 **为什么要四次挥手**  
 一次 FIN/ACK 只是把一边的连接断开，而 TCP 是双方都可以发消息接消息，因此需要双方都 FIN  
 为什么要等 2MSL(最长报文段寿命)？
 第一，为了保证 A 发送的最有一个 ACK 报文段能够到达 B。这个 ACK 报文段有可能丢失，因而使处在 LAST-ACK 状态的 B 收不到对已发送的 FIN 和 ACK 报文段的确认。B 会超时重传这个 FIN 和 ACK 报文段，而 A 就能在 2MSL 时间内收到这个重传的 ACK+FIN 报文段。接着 A 重传一次确认。
-第二，就是防止上面提到的已失效的连接请求报文段出现在本连接中，A 在发送完最有一个 ACK 报文段后，再经过 2MSL，就可以使本连接持续的时间内所产生的所有报文段都从网络中消失。
+第二，<源 IP, 源端口, 目标 IP, 目标端口>如果立即重用这个四元组建立新连接，旧连接中的延迟报文可能会被误认为是新连接的数据。等 2MSL 保证旧连接的数据在网络中消失。
 
 ## UDP
 
@@ -80,6 +86,12 @@ Runs over UDP
 Built-in encryption
 Allowing multiple streams within a single connection
 Reducing handshake time
+
+## 浏览器输入 url 发生什么
+
+1. dns query
+2. 如果是 http，就发起 tcp 连接，向目标服务器发送 http 请求与返回
+3. 如果是 https，就发起 tcp 连接，发起 tls 握手，验证服务器证书，交换会话密钥，发送用会话密钥加密的 http 请求与返回
 
 ## server 可以维持多少 TCP 连接？
 
@@ -305,9 +317,9 @@ epoll：最大连接数理论上没有限制，事件通知方式为回调通知
 服务发现：消费者根据返回的结果，选择一个或多个进行远程调用，通常结合负载均衡策略（轮询，权重，哈希）来选择服务节点  
 服务下线与健康检查：服务实例宕机或下线时，注册中心会更新服务列表，消费者通过监听或定期拉取，感知变化
 
-**服务发现的实现方式**
+**服务变更通知**
 主动拉取：客户端定时从注册中心拉取服务列表，简单但实时性差  
-被动订阅：客户端订阅服务比昂更，注册中心通过回调或者通知更新  
+被动订阅：客户端订阅服务变更，注册中心通过回调或者通知更新  
 混合模式：客户端启动时拉取一次服务列表，后续通过订阅接受变更
 
 ## websocket
@@ -357,7 +369,7 @@ cpu 只能调度线程
 
 ## thread vs coroutine
 
-coroutine: Lightweight function that can be paused/resumed, when doing context switching, only function states need to save. memory usage is low, since coroutines can share stack. cooperative scheduling(like GMP in GO)
+coroutine: 用户态的，轻量级线程。上下文切换开销低，只需保存执行状态，是在单线程内切换. 由程序负责切换而不是 os，
 
 ## REST(Representational State Transfer)
 
@@ -393,12 +405,6 @@ LRU：最近最久未使用。实现为 index 索引+双向链表
 ## 图灵完备
 
 一系列数据操作的规则（如指令集，编程语言，细胞自动机）可用来模拟单带自动机，那么他是图灵完备的。
-
-## 浏览器输入 url 发生什么
-
-1. dns query
-2. 如果是 http，就发起 tcp 连接，向目标服务器发送 http 请求与返回
-3. 如果是 https，就发起 tcp 连接，发起 tls 握手，验证服务器证书，交换会话密钥，发送用会话密钥加密的 http 请求与返回
 
 ## CAP 理论
 
@@ -486,3 +492,51 @@ int main() {
 信号量+共享内存：可实现互斥访问。P 占用，V 释放  
 信号：唯一的异步通信机制，通过发送指定信号通知进程执行信号处理程序  
 socket：不同主机上的进程通信
+
+## 进程调度算法
+
+FCFS，优先级，RR，短作业优先 SJF，最短剩余时间优先 SRTF
+抢占？非抢占？
+
+## 一个线程占多大内存
+
+由栈空间，TCB 线程控制块，线程私有数据 Thread local storage 组成，java 默认 1MB，linux glibc 默认 8MB
+
+## linux 命令
+
+```bash
+ps -ef  # 查看所有进程（标准格式）
+top #实时资源监控
+free -h #查看内存
+
+```
+
+## 大端小端（Big / small endian）
+
+大：高位放低字节，就像人看的一样
+地址： 0x1000 0x1001 0x1002 0x1003  
+数据： 12 34 56 78
+
+小：高位放高字节
+
+如何判断？
+
+```c
+#include <stdio.h>
+
+int main() {
+    int a = 1;
+    char *p = (char *)&a;
+    if (*p == 1)
+        printf("小端模式\n");
+    else
+        printf("大端模式\n");
+    return 0;
+}
+// 看1是在最高还是在最低
+```
+
+## 用户态，内核态
+
+两种运行级别，代表程序在不同权限下运行的状态。防止用户直接操作硬件或内核数据，且用户程序崩了不影响系统
+什么时候切换到内核态？系统调用如 read(), write()了；遇到异常如除 0，缺页，进入内核态执行异常处理程序；中断，如外设就绪向 cpu 发送中断
