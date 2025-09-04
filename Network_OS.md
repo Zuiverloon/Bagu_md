@@ -540,3 +540,46 @@ int main() {
 
 两种运行级别，代表程序在不同权限下运行的状态。防止用户直接操作硬件或内核数据，且用户程序崩了不影响系统
 什么时候切换到内核态？系统调用如 read(), write()了；遇到异常如除 0，缺页，进入内核态执行异常处理程序；中断，如外设就绪向 cpu 发送中断
+
+## 服务器 cpu 占用高的原因 如何排查
+
+应用层：死循环或递归，频繁 GC，SQL 全表扫描
+系统层：磁盘/网络 IO 阻塞，锁竞争，僵尸进程
+外部因素：ddos，木马或恶意脚本
+
+使用 top 查看高 CPU 进程
+使用 jstack 导出线程栈，查看 runnable 线程状态
+
+```bash
+jstack -l <PID> > thread_dump.txt
+```
+
+```text
+"Thread-1" #12 prio=5 tid=0x00007f8b4800e800 nid=0x1a03 waiting on condition
+   java.lang.Thread.State: WAITING (parking)
+   at sun.misc.Unsafe.park(Native Method)
+   at java.util.concurrent.locks.LockSupport.park(LockSupport.java:175)
+   at java.util.concurrent.locks.AbstractQueuedSynchronizer.acquireQueued(...)
+
+```
+
+## 服务器内存占用高的原因，如何排查
+
+应用层：内存泄漏，缓存未清理，数据处理过大
+系统层：文件占用，僵尸进程
+外部因素：木马攻击
+
+free 命令查看内存使用情况
+top 找出高占用进程
+jmap 分析堆内存
+
+```bash
+jmap -heap <pid> #查看堆内存结构
+jmap -histo[:live] <pid> #查看对象直方图（按类统计）
+# num     #instances         #bytes  class name
+# 1:      1000000            200000000   [B
+# 2:      500000             80000000    java.lang.String
+jmap -dump:live,format=b,file=heapdump.hprof <pid> # 生成堆转储文件（Heap Dump）
+```
+
+使用 MAT 查看 hprof 文件，查看：哪些对象占用最多内存，哪些对象有长引用链（GC Root → 大对象），是否存在缓存未清理、静态变量持有等问题

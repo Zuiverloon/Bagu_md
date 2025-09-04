@@ -169,6 +169,10 @@ AIO(per request per thread) 异步非阻塞 把数据放在缓冲区中 操作�
 **如何打破双亲委派**：
 自定义加载器，继承 classLoader 类，读 class 字节码，用 defineClass 方法将字节码转为 class 对象
 
+## serialVersionUID
+
+当你将一个对象序列化（写入磁盘或通过网络传输）后，Java 会将该对象所属类的 serialVersionUID 一并写入。反序列化时，JVM 会检查当前类的 serialVersionUID 是否与序列化时一致：
+
 ## ArrayList & CopyOnWriteArrayList
 
 ```java
@@ -402,6 +406,14 @@ public class Test {
 ```
 
 ## 线程
+
+**线程状态**
+new（新建）线程对象被创建，但没有调用 start 方法
+runnable （可运行）线程已调用 start，等待操作系统调度（包括就绪和运行）
+blocked 线程试图获取锁，但锁被其他线程占用
+waiting（无限期等待）线程等待其他线程显式唤醒
+timed_waiting（限时等待）在指定时间内等待，如 sleep，wait(timeout)
+terminated 线程执行完毕或抛出异常
 
 ### 创建线程的三种方法
 

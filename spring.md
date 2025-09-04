@@ -319,6 +319,10 @@ txManager.commit(status);
 1. 在代码中把异常捕获了，导致事务管理器没有捕获到异常
 2. 抛错了异常
 
+## http 请求收到后如何传递到 controller
+
+请求进入 servlet 容器（如 tomcat），经过一系列 filter 到达 dispatchservlet（中央调度器），根据 path 方法找到 controller，执行拦截器，调用 controller 对应方法
+
 ## spring 和 springboot 的区别
 
 spring:
