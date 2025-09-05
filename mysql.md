@@ -104,6 +104,18 @@ where b = 1 and c = 1(未命中)
 ```
 
 用 explain 看下 sql 是怎么执行的，是否扫全表，是否命中了索引
+打开慢查询日志
+
+```lni
+slow_query_log = 1
+long_query_time = 1
+```
+
+查看慢查询语句：
+
+```bash
+tail -f /var/log/mysql/slow-query.log
+```
 
 ## 有哪些存储引擎
 

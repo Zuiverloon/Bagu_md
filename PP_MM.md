@@ -25,14 +25,17 @@ fetch live data from datadog, or periodically run cron jobs to fetch metrics/cou
 
 ## druid 优点
 
-1. 时序数据库
-2. 支持 SQL/JSON
-3. 实时性高
-4. 聚合分组查询效率高
+时序数据库  
+支持 SQL/JSON  
+实时性高  
+聚合分组查询效率高  
+列存储  
+预聚合：摄入时对相同维度数据进行聚合，减少存储量
+倒排索引
 
 同类的有 clickhouse，但是实时性不如 druid
 用 tranquilizer 发送单条数据，自动处理分片，支持异步、重试、回调
-用 curator 当作 zookeeper，
+用 curator 当作 zookeeper
 
 ## 项目难点
 
@@ -51,3 +54,7 @@ kryo 序列化器不是 thread safe 的
 • T = Task: What was your responsibility or goal?
 • A = Action: What steps did you take to solve the problem?
 • R = Result: What was the outcome? Try to quantify it if possible.
+
+## druid
+
+支持 sql
