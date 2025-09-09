@@ -154,8 +154,8 @@ set:底层是红黑树
 
 ## static 关键字
 
-1. 在函数内部的静态局部变量(作用域：函数内部)：只初始化一次，直到程序结束销毁，保留函数调用间的状态。
-2. 静态全局变量：仅当前文件可访问
+1. 在函数内部的静态局部变量(作用域：函数内部)：只初始化一次，直到程序结束销毁，保留函数调用间的状态。第一次执行到初始化
+2. 静态全局变量：仅当前文件可访问，存在静态区。常量是编译期初始化，设计运算是程序加载时，涉及构造是运行时。
 3. static 方法：仅限当前文件访问
 4. static 静态成员变量：属于类本身，所有对象共享，可通过类名访问`MyClass::count`
 5. 静态成员函数：没有 this 指针，不可访问非静态成员，通过类名直接调用 `MyClass::showCount()`
@@ -222,6 +222,9 @@ malloc 不可重入，被中断可能死锁
 inline 函数，编译器可能直接将函数体放入代码调用处，可以减少函数调用开销，不需要入栈传参等，但是是编译器决定的，可能会忽略，也会增大可执行文件体积。  
 inline 是用于实现的关键字，类中定义的成员函数默认 inline，但是必须在实现的时候加上 inline 关键字。  
 递归函数不能内联。
+
+**inline 和宏的区别**  
+宏是纯粹的文本替换
 
 ## 数组和指针的区别
 
@@ -346,15 +349,28 @@ struct B {
 
 控制块：负责管理 shared，weakptr 的生命周期，创建一个 sharedptr 就会创建一个控制块，拷贝 sharedptr 就让强引用+1，销毁一个就-1，强引用变 0 时，调用删除器释放资源，但是控制块仍然存在直到弱引用也变为 0
 
-## RAII
-
 ## 左值，右值，左值引用，右值引用
 
 左：可出现在赋值号左边，表示有持久地址的对象，能取地址  
 右：只能出现在赋值号右边，不可取地址
 
-左值引用&：只能绑定左值，，用于避免拷贝  
+左值引用&：只能绑定左值，，用于避免拷贝
+
+```c++
+int x = 10;
+int& ref = x;     // 左值引用绑定变量 x
+ref = 20;         // 修改 x 的值
+std::cout << x;   // 输出 20
+
+```
+
 右值引用&&：只能绑定右值，用于实现移动语义，避免拷贝，可用于延长右值生命周期
+
+```c++
+int&& r1 = 42;            // 绑定字面常量
+int&& r2 = 5 + 3;         // 绑定表达式结果
+std::string&& s = std::string("hello");  // 绑定临时对象
+```
 
 ## move 方法
 
@@ -657,7 +673,39 @@ class D : public B, public C {};  // D 中只有一份 A::val
 
 ## 函数重载
 
+语法糖，编译器通过名称修饰机制让它们看起来变成不同的符号，实现区分和链接。
+**匹配优先级**
+函数重载的匹配优先级是由编译器在编译期根据实参类型或形参类型的匹配程度决定的，这个过程分为三个阶段：候选函数 - 可行函数 - 最佳匹配
+| 优先级 | 匹配类型 | 示例说明 |
+|--------|----------------------------------|-----------------------------------|
+| ① | 精确匹配 | 实参类型与形参完全一致，如 `int → int` |
+| ② | 顶层 const 转换 | `int → const int`（顶层 const 可忽略） |
+| ③ | 底层 const 转换 | `int* → const int*`（指针底层 const） |
+| ④ | 类型提升（Promotion） | `char → int`, `float → double` |
+| ⑤ | 算术类型转换（Conversion） | `int → double`, `short → float` |
+| ⑥ | 类类型转换（Class Conversion） | `Derived → Base` 或构造函数/转换运算符 |
+
 ## 程序启动过程
+
+预处理：处理#开头的指令，生成.i / .ii 文件，包含展开后的完整源代码
+编译：将预处理后的代码转换为汇编代码.s 文件（词法分析 - 语法分析 - 语义分析 - 构建抽象语法树 - 优化代码）
+汇编：将汇编代码转换为机器码，将.s 文件转为 .o/obj 目标文件，包含符号表，但不能直接运行，可能引用外部符号如库函数
+链接：将多个目标文件和库文件合并为可执行文件，符号解析，重定位，静态链接，动态链接，生成.exe(win) / 可执行文件(linux)
+装载：os 将可执行文件加载到内存，分配内存空间，加载代码段数据端，初始化运行环境，跳转到 main 开始执行
+运行：os 创建进程，分配资源，执行 main，结束后释放资源，退出进程
+
+**可执行文件中包含哪些部分**  
+文件头 file header：描述文件类型，目标平台，入口地址等  
+程序头 program header：指示 os 如何将文件内容加载到内存，包括代码段数据段的映射方式  
+节头 section header：描述每个节的便宜，大小，权限  
+代码段 text：编译后的机器指令  
+只读数据段 rodata：字符串常量  
+数据段 data：初始化的全局/静态变量  
+未初始化数据段 bss：未初始化的全局/静态变量，运行时由 OS 分配空间  
+符号表 symtab：存放函数名，变量名等信息，供调试器链接器使用  
+重定位表 rel/rela：用于链接时调整地址引用，尤其是使用动态库时  
+调试信息表 debug：开启了-g，会包含源码行号、变量名等信息，供 gdb 调试使用  
+初始化段 init：存放程序启动和结束时自动执行的函数
 
 ## 线程
 
@@ -703,8 +751,48 @@ detach 方法让线程在后台独立运行，不再可控，适用于写日志�
 
 **捕获列表**  
 lambda 可以访问外部变量，但必须通过捕获列表声明  
+| 捕获方式 | 语法示例 | 说明 |
+|------------------|--------------------|--------------------------------------------|
+| 不捕获 | `[]` | 不访问任何外部变量 |
+| 值捕获 | `[x]` | 拷贝变量 `x` 的值 |
+| 引用捕获 | `[&x]` | 捕获变量 `x` 的引用 |
+| 隐式值捕获 | `[=]` | 按值捕获所有使用的外部变量 |
+| 隐式引用捕获 | `[&]` | 按引用捕获所有使用的外部变量 |
+| 混合捕获 | `[=, &y]` | 按值捕获其他变量，引用捕获 `y` |
+| 初始化捕获（C++14 起） | `[z = x + 5]` | 捕获并初始化一个新变量 `z` |
+| 可变捕获（mutable） | `[x]() mutable` | 允许修改值捕获的变量（默认是 const） |
+
 **编译器如何处理 lambda**  
-lambda 会被编译器转换为一个匿名类，重载 operator(),本质上是一个函数对象 functor
+lambda 会被编译器转换为一个匿名类，重载 operator(),本质上是一个函数对象 functor，捕获的变量会变成类的成员变量。
+
+**高级用法**  
+可变 lambda(mutable)，默认 lambda 是 const 的，不能修改捕获的值，使用 mutable 可以解除限制
+
+```c++
+int x = 10;
+auto f = [x]() mutable {
+x += 5;
+return x;
+};
+```
+
+泛型 lambda(c++14)
+
+```c++
+auto print = [](auto x) {
+    std::cout << x << std::endl;
+};
+```
+
+Lambda 与 STL 算法结合
+
+```c++
+std::vector<int> v = {1, 2, 3, 4, 5};
+std::for_each(v.begin(), v.end(), [](int x) {
+    std::cout << x * x << " ";
+});
+
+```
 
 ## 函数对象
 
@@ -712,6 +800,216 @@ lambda 会被编译器转换为一个匿名类，重载 operator(),本质上是�
 多用于 STL，替代函数指针，回调
 
 ## gdb
+
+gnu debugger,用来调试 c++程序
+
+## RAII
+
+Resource Acquisition Is Initialization，资源获取即初始化，将资源的生命周期绑定到对象的生命周期，在对象构造时获取资源，在对象析构时释放资源
+应用场景如：
+动态内存管理：std::unique_ptr, std::shared_ptr
+文件操作：std::ifstream, std::ofstream
+互斥锁：std::unique_lock
+db 连接
+线程管理：jthread（满足 RAII 的 thread 类）
+
+## unique_lock, safe_guard
+
+**unique_lock 互斥锁**  
+支持自动加锁解锁，构造时立即调用 mtx.lock()，离开作用域时自动调用 mtx.unlock()
+
+```c++
+std::mutex mtx;
+std::unique_lock<std::mutex> lock(mtx);  // 构造时自动加锁
+```
+
+也可以延迟加锁，在需要的时候加锁/解锁
+
+```c++
+std::unique_lock<std::mutex> lock(mtx, std::defer_lock);  // 不立即加锁
+// ...执行其他逻辑
+lock.lock();  // 手动加锁
+lock.unlock();  // 手动释放锁
+
+```
+
+可以与条件变量配合使用
+
+**lock_guard**
+与 unique_lock 相似，但是他只支持构建时自动加锁析构时自动解锁
+
+## mutex c++11
+
+实现互斥访问的核心类，lock unlock
+c++11 之前，只能通过 pthread（unix/linux）来实现线程间的互斥访问
+
+```c++
+#include <pthread.h>
+
+pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+
+void* thread_func(void*) {
+    pthread_mutex_lock(&mtx);   // 加锁
+    // 临界区
+    pthread_mutex_unlock(&mtx); // 解锁
+    return nullptr;
+}
+```
+
+## condition_variable
+
+**cv.wait(lock, predicate) 会：**  
+自动释放锁（让其他线程可以修改条件）  
+阻塞当前线程，直到条件满足  
+条件满足后重新加锁，然后继续执行后续代码
+
+**虚假唤醒**  
+没有收到明确的唤醒信号，意外地从等待状态中恢复执行，如未在 wait 方法里使用条件，错误使用了 notifyall
+
+## stl vector
+
+**push_back vs emplace_back**
+push：添加一个已构造好的对象，可能需要拷贝或移动  
+emplace：直接在容器尾部原地构造，无需拷贝，接受构造函数参数，快
+
+**扩容机制**
+当 size==capacity 再调用 pushback 就会触发扩容，gcc 默认扩 2 倍，触发 n 次 pushback 的复杂度是 O(1)  
+如果有 no except 的移动构造，那就是移动，不然就是拷贝
+
+**和 list 的区别**
+list：双向链表，节点独立，内存中非连续  
+都是线程不安全
+
+## stl map
+
+底层是红黑树，默认按 key 升序，也可自定义
+
+## stl set
+
+底层是红黑树，默认按元素升序，也可自定义
+
+```c++
+set<ll> st;
+st.insert(1);
+st.insert(11);
+st.insert(100);
+set<ll>::iterator lb = lower_bound(st.begin(), st.end(), 11);
+cout << (*lb) << "\n";
+```
+
+## stl deque
+
+分段连续空间+中控器 map（指针数组，指向每个缓冲区）
+当前后无法添加新缓冲区时，对中控器扩容
+
+## stl 迭代器失效
+
+迭代器： 封装了容器内部指针或节点的类对象  
+重载了\*，->,++,-- 运算符等，使行为类似原生指针
+失效原因：容器结构发生变化后变得不可用或指向错误位置。
+
+## threadlocal c++11
+
+声明线程局部存储变量，为每个线程创建该变量的独立副本，防止数据竞争  
+不适合需要跨线程共享或传递的变量  
+初始化是懒加载，首次访问才初始化  
+底层实现：
+
+1. 编译器将 threadlocal 变量标记为 TLS Thread Local Storage 类型，这些变量被放入 tbss/tdata 段
+2. 操作系统为每个线程维护一个 TLS 内存，TCB 中包含一个指向 TLS 区的指针，线程切换时，TCB 和相关寄存器 fs gs 也会切换，从而访问正确的 TLS 区域
+
+```c++
+#include <iostream>
+#include <thread>
+
+thread_local int counter = 0;
+
+void thread_func(int id) {
+    counter++;
+    std::cout << "Thread " << id << " counter = " << counter << std::endl;
+}
+
+int main() {
+    std::thread t1(thread_func, 1);
+    std::thread t2(thread_func, 2);
+    t1.join();
+    t2.join();
+}
+
+```
+
+## struct 和 class 的区别
+
+struct：默认 public 访问，默认 public 继承  
+class：默认 private 访问，默认 privat 继承
+
+## makefile cmake make
+
+makefile：文本文件，定义了如何编译和链接程序，配合 make 命令使用，告诉编译器那些源文件需要编译，编译顺序与依赖，使用哪些编译器和参数，如何生成最终可执行文件
+cmake：跨平台的构建系统生成器，自动生成 makefile 或其他构建系统文件
+make：自动化构建工具，决定哪些文件需要重新编译，执行相应的命令
+
+## g++参数
+
+-c 不连接，只编译为目标文件
+-o 指定输出名
+-E 只预处理
+-S 汇编代码
+-v 详细过程
+-g debug 信息
+-l 指定链接库
+
+## 虚假共享
+
+现代 CPU 使用缓存行（通常为 64 字节）作为缓存的最小单位。当一个线程修改某个变量时，整个缓存行会被标记为脏，并触发缓存一致性协议，强制其他线程的缓存副本失效。即使 A 修改 x，B 修改 y，只要 x 和 y 在同一个缓存行中，就会互相干扰。  
+**典型表现**：
+多线程程序性能远低于预期
+增加线程数后性能反而下降
+CPU 核心频繁等待缓存同步
+高缓存未命中率 cache miss
+
+**如何解决？**
+手动填充 padding，
+使用 alignas(64)强制对齐
+使用 c++17 的标准常量
+使用 threadlocal 避免共享
+
+## volatile
+
+volatile 是一个类型修饰符，它的作用是告诉编译器：这个变量的值可能在程序的控制之外发生变化，因此每次访问它都必须从内存中读取，而不能使用寄存器中的缓存值。
+禁止编译器优化访问行为：编译器通常会优化变量访问，比如将变量缓存到寄存器中。
+确保每次访问都从内存读取
+
+## static cast vs dymanic cast
+
+static cast：编译时转换，不安全，用于基本类型/上行转换（派生类 to 基类），下行转换需要开发者保证安全，如果下行转换时对象不是派生类，会导致未定义行为
+dynamic cast：运行时转换，用于下行转换，安全，失败就返回空指针或 bad cast 异常（引用）
+
+## template
+
+类型参数，根据参数自动实现对应的函数或类
+
+```c++
+template <typename T>
+T Max(T a, T b) {
+    return a > b ? a : b;
+}
+```
+
+底层实现：
+模版不生成代码，而是在使用时编译器根据具体类型生成代码
+
+## include "" 和 <>
+
+引号：编译器优先在当前工作目录查找该文件。如果找不到，再去标准头文件路径中查找。  
+尖括号：编译器直接在系统或标准库路径中查找。
+
+## NULL 和 nullptr
+
+NULL 就是 0， define 定义的  
+nullptr 是 c++11 引入的空指针的表示方式，指向 nullptr 的变量，如果访问他的值，会段错误
+
+## NUMA SMP
 
 ## 交替打印 1234 abcd 成为 1a2b3c4d
 
@@ -789,73 +1087,94 @@ void solve(int cas)
 }
 ```
 
-## stl vector
-
-**push_back vs emplace_back**
-push：添加一个已构造好的对象，可能需要拷贝或移动  
-emplace：直接在容器尾部原地构造，无需拷贝，接受构造函数参数，快
-
-**扩容机制**
-当 size==capacity 再调用 pushback 就会触发扩容，gcc 默认扩 2 倍，触发 n 次 pushback 的复杂度是 O(1)  
-如果有 no except 的移动构造，那就是移动，不然就是拷贝
-
-**和 list 的区别**
-list：双向链表，节点独立，内存中非连续  
-都是线程不安全
-
-## stl map
-
-底层是红黑树，默认按 key 升序，也可自定义
-
-## stl set
-
-底层是红黑树，默认按元素升序，也可自定义
+## LRUCache
 
 ```c++
-set<ll> st;
-st.insert(1);
-st.insert(11);
-st.insert(100);
-set<ll>::iterator lb = lower_bound(st.begin(), st.end(), 11);
-cout << (*lb) << "\n";
-```
+class ListNode
+{
+public:
+	int key;
+	int value;
+	ListNode *left;
+	ListNode *right;
+};
 
-## stl 迭代器失效
+class LRUCache
+{
+public:
+	ListNode *head;
+	map<int, ListNode *> mp;
+	int capacity;
+	int size;
+	LRUCache(int _capacity) : capacity(_capacity)
+	{
+		size = 0;
+		head = new ListNode();
+		head->left = head;
+		head->right = head;
+		head->key = -1;
+	}
 
-迭代器： 封装了容器内部指针或节点的类对象  
-重载了\*，->,++,-- 运算符等，使行为类似原生指针
+public:
+	void put(int key, int value);
+	int get(int get);
+	void removeNode(ListNode *node)
+	{
+		node->left->right = node->right;
+		node->right->left = node->left;
+	}
 
-## threadlocal c++11
+	void addFirst(ListNode *node)
+	{
+		node->left = head;
+		node->right = head->right;
+		node->right->left = node;
+		head->right = node;
+	}
+};
 
-声明线程局部存储变量，为每个线程创建该变量的独立副本，防止数据竞争  
-不适合需要跨线程共享或传递的变量  
-初始化是懒加载，首次访问才初始化  
-底层实现：
-
-1. 编译器将 threadlocal 变量标记为 TLS Thread Local Storage 类型，这些变量被放入 tbss/tdata 段
-2. 操作系统为每个线程维护一个 TLS 内存，TCB 中包含一个指向 TLS 区的指针，线程切换时，TCB 和相关寄存器 fs gs 也会切换，从而访问正确的 TLS 区域
-
-```c++
-#include <iostream>
-#include <thread>
-
-thread_local int counter = 0;
-
-void thread_func(int id) {
-    counter++;
-    std::cout << "Thread " << id << " counter = " << counter << std::endl;
+void LRUCache::put(int key, int value)
+{
+	if (this->mp.find(key) == this->mp.end())
+	{
+		if (size == capacity)
+		{
+			ListNode *last = head->left;
+			mp.erase(last->key);
+			removeNode(last);
+		}
+		else
+		{
+			size++;
+		}
+		ListNode *node = new ListNode();
+		node->key = key;
+		node->value = value;
+		addFirst(node);
+		mp[key] = node;
+	}
+	else
+	{
+		ListNode *node = mp[key];
+		node->value = value;
+		removeNode(node);
+		addFirst(node);
+	}
 }
 
-int main() {
-    std::thread t1(thread_func, 1);
-    std::thread t2(thread_func, 2);
-    t1.join();
-    t2.join();
+int LRUCache::get(int key)
+{
+	if (mp.find(key) == mp.end())
+	{
+		return -1;
+	}
+	else
+	{
+		ListNode *node = mp[key];
+		int ans = node->value;
+		removeNode(node);
+		addFirst(node);
+		return ans;
+	}
 }
-
 ```
-
-## struct 和 class 的区别
-
-struct：默认 public 访问，默认 public 继承  
-class：默认 private 访问，默认 privat 继承
