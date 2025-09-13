@@ -184,8 +184,6 @@ const int* const i;//指针不能乱指，值也不能变
 2. 修饰函数：如果传入变量，就运行期执行，如果传入常量，就编译期确定
 3. 修饰构造函数：编译期就创建对象（可能存在静态区或者直接嵌入指令）
 
-## 引用折叠
-
 ## noexcept 关键字(c++11)
 
 声明一个函数不会抛出异常，如果真的有异常，就直接 terminate，便于编译器优化异常处理代码
@@ -313,13 +311,76 @@ Student stu = func(); // 为了防止对象被销毁，编译器用拷贝构造�
 ## 智能指针
 
 封装了原始指针的类，自动管理动态内存资源。智能指针对象创建时，自动获取资源，离开作用域时自动释放，防止悬空、内存泄漏  
-unique_ptr 独占所有权，不能复制，只能移动，析构自动调用 delete
+unique_ptr 独占所有权，不能复制，只能移动，析构自动调用 delete。不允许拷贝构造/赋值，只允许移动构造/复制
 
 ```c++
 #include <memory>
 std::unique_ptr<int> p1 = std::make_unique<int>(42);
 // std::unique_ptr<int> p2 = p1; ❌ 不允许复制
 std::unique_ptr<int> p2 = std::move(p1); // ✅ 所有权转移
+```
+
+```c++
+#include <iostream>
+
+template<typename T>
+class UniquePtr {
+private:
+    T* ptr;
+
+public:
+    // 构造函数
+    explicit UniquePtr(T* p = nullptr) : ptr(p) {}
+
+    // 禁止拷贝构造和拷贝赋值
+    UniquePtr(const UniquePtr&) = delete;
+    UniquePtr& operator=(const UniquePtr&) = delete;
+
+    // 移动构造
+    UniquePtr(UniquePtr&& other) noexcept : ptr(other.ptr) {
+        other.ptr = nullptr;
+    }
+
+    // 移动赋值
+    UniquePtr& operator=(UniquePtr&& other) noexcept {
+        if (this != &other) {
+            delete ptr;         // 释放当前资源
+            ptr = other.ptr;    // 接管资源
+            other.ptr = nullptr;
+        }
+        return *this;
+    }
+
+    // 析构函数
+    ~UniquePtr() {
+        delete ptr;
+    }
+
+    // 获取原始指针
+    T* get() const { return ptr; }
+
+    // 解引用操作符
+    T& operator*() const { return *ptr; }
+    T* operator->() const { return ptr; }
+
+    // 释放所有权并返回原始指针
+    T* release() {
+        T* temp = ptr;
+        ptr = nullptr;
+        return temp;
+    }
+
+    // 重置指针
+    void reset(T* p = nullptr) {
+        if (ptr != p) {
+            delete ptr;
+            ptr = p;
+        }
+    }
+
+    // 检查是否为空
+    explicit operator bool() const { return ptr != nullptr; }
+};
 ```
 
 shared_ptr 共享所有权，引用计数管理资源，适合多个对象共享资源
@@ -399,6 +460,19 @@ public:
 ```
 
 对 const 对象使用 move 不会触发移动构造，因为移动构造需要修改源对象
+
+## 完美转发
+
+一种模版编程技巧，可以在模版函数中无损地把参数传递下去，既保持左值右值特性，又避免多余的拷贝和错误的重载匹配。没有完美转发，传参时可能会丢失值类别信息
+forward 函数：有条件的转成右值，只有当原始参数是右值时才转
+
+## 万能引用
+
+T&&，类型是模版参数或 auto&&
+
+## 引用折叠
+
+用来处理引用的引用这种语法上不允许的情况。只要有一个是左值，就是左值，只有两个都是右值，结果才是右值
 
 ## 构造函数 拷贝构造函数 移动构造函数 析构函数
 
@@ -623,9 +697,55 @@ class D : public B, public C {};  // D 中只有一份 A::val
 虚表指针 vptr：每个对象都有一个隐藏的的指针成员，指向所属类的虚函数表，通过基类指针调用虚函数时，会先读 vptr 找到 vtable，在调用表中对应位置的函数地址  
 `c++`
 
+## 不依靠虚函数表，如何实现多态
+
+**CRTP 奇异递归调用模版（静态多态）**
+基类是一个类模版，模版参数是派生类
+派生类继承这个基类，把自己作为模版参数传进去
+基类通过 static cast 调用派生类的方法，编译器在编译期剧可以确定调用的目标
+
+```c++
+template<typename Derived>
+class Base {
+	public:
+	void run() {
+		static_cast<Derived*>(this)->impl();
+	}
+};
+class Foo : public Base<Foo> {
+	public:
+	void impl() { /* 编译期确定的实现 */ }
+};
 ```
 
+**函数指针**
+对象内部保存了一个函数指针，调用时直接跳转到对应实现
+
+```c++
+#include <iostream>
+#include <functional>
+using namespace std;
+
+class Food {
+public:
+    using FlopFunc = function<void()>;
+    Food(FlopFunc f) : flopFunc(f) {}
+    void Flop() const { flopFunc(); }
+private:
+    FlopFunc flopFunc;
+};
+
+int main() {
+    Food fish([]{ cout << "鱼肉糊了\n"; });
+    Food burg([]{ cout << "汉堡糊了\n"; });
+    fish.Flop();
+    burg.Flop();
+}
 ```
+
+## 延迟绑定
+
+运行时，根据对象的类型，才决定调用哪个函数
 
 ## 内存管理 代码区 常量区 全局/静态区 data+bss 栈区 堆
 
@@ -1009,7 +1129,66 @@ T Max(T a, T b) {
 NULL 就是 0， define 定义的  
 nullptr 是 c++11 引入的空指针的表示方式，指向 nullptr 的变量，如果访问他的值，会段错误
 
+## explicit
+
+禁止构造函数或类型转换运算符(c++11)被编译器隐式调用  
+**隐式调用构造函数**  
+如果一个类有单参数构造函数，编译器会把它当作隐式类型转换构造函数，允许用一个其他类型的值直接初始化这个类的对象
+
+```c++
+struct Date {
+    Date(int y) : year(y) {}
+    int year;
+};
+
+int main() {
+    Date d1 = 2023; // ✅ 隐式调用 Date(int)
+}
+```
+
+**隐式调用类型转换运算符**
+
+```c++
+struct X {
+    explicit operator bool() const { return true; }
+};
+
+X x;
+if (x) { }        // ✅ 显式转换
+bool b = x;       // ❌ 编译错误：禁止隐式转换
+```
+
+## atomic
+
+模版类，线程安全
+
+```c++
+#include <atomic>
+#include <thread>
+#include <iostream>
+
+std::atomic<int> counter(0);
+
+void increment() {
+    for (int i = 0; i < 100000; ++i) {
+        counter.fetch_add(1); // 原子加
+    }
+}
+```
+
 ## NUMA SMP
+
+**NUMA(Non uniform memory access)**
+将系统划分为多个 numa 节点，每个节点包括一个或多个 cpu 核，本地内存（直接挂在 cpu 上面），本地 IO，访问本地内存快，访问其他节点的内存慢
+
+## core dump
+
+核心转储，程序发生严重运行错误时，操作系统将当前内存状态、寄存器、调用栈等信息写入一个 core 文件。编译时最好带上-g，不然看不到行号
+常见的触发情况包括：非法内存访问，栈溢出，非法指令，除 0，多线程数据竞争，显式触发 abort，terminate，raise(SIGABRT)等
+生成 coredump 的前提是：
+系统允许生成 core 文件：
+有写入权限：core 文件会写到当前目录或 /proc/sys/kernel/core_pattern 指定的位置
+程序未被安全显示：某些 setuid 程序默认禁止生成 core dump（可通过 /proc/sys/fs/suid_dumpable 配置）
 
 ## 交替打印 1234 abcd 成为 1a2b3c4d
 
@@ -1177,4 +1356,87 @@ int LRUCache::get(int key)
 		return ans;
 	}
 }
+```
+
+## 简版 shared_ptr
+
+```c++
+template <typename T>
+class SharedPtr
+{
+private:
+	T *val;
+	int *shared_ref;
+
+public:
+	SharedPtr(T *val) : val(val), shared_ref(new int(1))
+	{
+	}
+
+	SharedPtr(SharedPtr &other) : shared_ref(other.shared_ref), val(other.val)
+	{
+		cout << "copy cons\n";
+		(*(this->shared_ref))++;
+	}
+
+	SharedPtr &operator=(SharedPtr &other)
+	{
+		cout << "copy =\n";
+		if (*this != other)
+		{
+			release();
+			val = other.val;
+			shared_ref = other.shared_ref;
+			*(this->shared_ref)++;
+		}
+		return *this;
+	}
+
+	SharedPtr(SharedPtr &&other) : shared_ref(other.shared_ref), val(other.val)
+	{
+		cout << "move cons\n";
+
+		other.val = nullptr;
+		other.shared_ref = nullptr;
+	}
+
+	SharedPtr &operator=(SharedPtr &&other)
+	{
+		cout << "move =\n";
+
+		if (*this != other)
+		{
+			release();
+			this->shared_ref = other.shared_ref;
+			this->val = other.val;
+			other.shared_ref = nullptr;
+			other.val = nullptr;
+		}
+		return *this;
+	}
+
+	~SharedPtr()
+	{
+		cout << "destruct\n";
+		release();
+	}
+
+	int get_ref_count()
+	{
+		return *shared_ref;
+	}
+
+	void release()
+	{
+		if (shared_ref != nullptr)
+		{
+			(*shared_ref)--;
+			if ((*shared_ref) == 0)
+			{
+				delete this->shared_ref;
+				delete this->val;
+			}
+		}
+	}
+};
 ```

@@ -122,3 +122,7 @@ bin/kafka-console-consumer.sh --bootstrap-server <broker> --topic <topic-name> -
 
 对生产者：数据可能丢失，除非消息同步到所有副本（ack=all）  
 对消费者：消费者只能从 leader 读取，leader 宕机了会选举新的 leader，消费者会重连，没有副本选为 leader 就停止消费
+
+## kafka 协议
+
+kafka 在客户端/broker 通信时，使用的是基于 TCP 的自定义二进制协议，称为 kafka 协议

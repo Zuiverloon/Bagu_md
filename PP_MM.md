@@ -6,6 +6,8 @@ jdk 17
 springboot 2.7
 spring-kafka 2.9 (kafka 3.2)
 react17
+0.9 core，8GB RAM
+50%cpu utilization，30% MEM utilization
 
 ## merchant monitoring
 

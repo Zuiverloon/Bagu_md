@@ -232,3 +232,130 @@ public class ParkingLot {
 
 }
 ```
+
+## CSV query
+
+```java
+
+class ExecutionEngine {
+    Map<String, QueryResult> map;
+
+    public ExecutionEngine() {
+        map = new HashMap<>();
+        readCountry();
+        readLanguage();
+
+    }
+
+    private void readCountry() {
+        String content = "country,latitude,longitude,country_name\n" +
+                "AD,42.546245,1.601554,Andorra\n" +
+                "AE,23.424076,53.847818,United Arab Emirates\n" +
+                "AF,33.93911,67.709953,Afghanistan";
+        read("countries.csv", content);
+    }
+
+    private void readLanguage() {
+        String content = "country_name,country_code_name,country_code,lang_name,lang_code\n" +
+                "Afghanistan,af,93,Pashto,ps\n" +
+                "Afghanistan,af,93,Dari,dr\n" +
+                "Albania,al,355,Albanian,sq";
+        read("language.csv", content);
+    }
+
+    private void read(String fileName, String content) {
+        String[] lines = content.split("\n");
+        List<List<String>> contentList = Arrays.stream(lines).map(this::parseLine).collect(Collectors.toList());
+        QueryResult queryResult = new QueryResult(contentList.get(0), contentList.subList(1, contentList.size()));
+        map.put(fileName, queryResult);
+    }
+
+    private List<String> parseLine(String line) {
+        String[] values = line.split(",");
+        return Arrays.stream(values).collect(Collectors.toList());
+    }
+
+    public QueryResult from(String fileName) {
+        return map.getOrDefault(fileName, null);
+    }
+}
+
+class QueryResult{
+    List<String> header;
+    List<List<String>> rows;
+    Map<String, Integer> headerIdx;
+
+    public QueryResult(List<String> header, List<List<String>> rows) {
+        this.header = header;
+        this.rows = rows;
+        this.headerIdx = getHeaderIdx(header);
+    }
+
+    public void print() {
+        printLine(header);
+        rows.forEach(this::printLine);
+    }
+
+    private void printLine(List<String> row){
+        System.out.println(String.join(",", row));
+    }
+
+    private Map<String, Integer> getHeaderIdx(List<String> header) {
+        Map<String, Integer> map = new HashMap<>();
+        for (int i = 0;i<header.size();i++){
+            map.put(header.get(i), i);
+        }
+        return map;
+    }
+
+    public QueryResult select(List<String> columns){
+        List<List<String>> ans = new ArrayList<>();
+        rows.forEach((row) -> {
+            List<String> selectedRow = new ArrayList<>();
+            for (int i = 0;i<columns.size();i++){
+                int id = headerIdx.get(columns.get(i));
+                selectedRow.add(row.get(id));
+            }
+            ans.add(selectedRow);
+        });
+        return new QueryResult(columns,ans);
+    }
+
+    public QueryResult sort(String column){
+        int id = headerIdx.getOrDefault(column, -1);
+        if (id == -1){
+            return new QueryResult(this.header, this.rows);
+        }
+        List<List<String>> ans = new ArrayList<>(rows);
+        Collections.sort(ans, Comparator.comparingDouble(r -> Double.parseDouble(r.get(id))));
+        return new QueryResult(this.header, ans);
+    }
+
+    public QueryResult take(int n) {
+        return new QueryResult(this.header, this.rows.subList(0,Math.min(n,this.rows.size())));
+    }
+
+    public QueryResult count(String column) {
+        int id = headerIdx.getOrDefault(column, -1);
+        if (id == -1) {
+            return new QueryResult(Arrays.asList(column, "count"), new ArrayList<>());
+        }
+        Map<String, Integer> ts = new TreeMap<>();
+        for (List<String> row:rows){
+            String value = row.get(id);
+            ts.put(value, ts.getOrDefault(value, 0)+1);
+        }
+        List<List<String>> ans = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : ts.entrySet()) {
+            ans.add(Arrays.asList(entry.getKey(), String.valueOf(entry.getValue())));
+        }
+        Collections.sort(ans, (r1, r2) -> {
+            return Integer.valueOf(r2.get(1)) - Integer.valueOf(r1.get(1));
+        });
+        return new QueryResult(Arrays.asList(column, "count"), ans);
+    }
+
+
+
+}
+```

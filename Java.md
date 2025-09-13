@@ -408,11 +408,11 @@ public class Test {
 ## 线程
 
 **线程状态**
-new（新建）线程对象被创建，但没有调用 start 方法
-runnable （可运行）线程已调用 start，等待操作系统调度（包括就绪和运行）
-blocked 线程试图获取锁，但锁被其他线程占用
-waiting（无限期等待）线程等待其他线程显式唤醒
-timed_waiting（限时等待）在指定时间内等待，如 sleep，wait(timeout)
+new（新建）线程对象被创建，但没有调用 start 方法  
+runnable （可运行）线程已调用 start，等待操作系统调度（包括就绪和运行）  
+blocked 线程进入 synchronized 试图获取锁，但锁被其他线程占用，jvm 自动唤醒他。本质是等待获取监视器锁的状态  
+waiting（无限期等待）线程等待其他线程显式唤醒，其他线程调用 notify 唤醒他  
+timed_waiting（限时等待）在指定时间内等待，如 sleep，wait(timeout)  
 terminated 线程执行完毕或抛出异常
 
 ### 创建线程的三种方法
@@ -696,7 +696,7 @@ future.onTimeout(1,TimeUnits.SECOND)//如果需要有一个超时时间,并不�
 ## volatile 关键字
 
 如果一个线程修改了数据，别的线程可以立即看见
-不加 volatile 可能从每个线程的工作内存中读，加了 volatile 就是加了内存屏障，读写都去主内存
+不加 volatile 可能从每个线程的工作内存（寄存器/cache）中读，加了 volatile 就是加了内存屏障，读写都去主内存（堆/方法区）
 禁止指令重排
 
 ## transient 关键字
@@ -844,7 +844,9 @@ private static int counter = 0;
 ## Threadlocal
 
 每个 thread object 里面维护了一个 threadlocalmap，key 是 threadlocal，使用开放地址法解决 hash 冲突  
-由于 key 是弱引用，value 是强引用，如果 key(threadlocal)被 GC 回收，key 就变成 null 但是 value 仍存在，就内存泄漏了，解决方法：1. 使用完毕后调用 remove， 2. 将 threadlocal 定义为 static final，延长生命周期
+由于 key 是弱引用，value 是强引用，如果 key(threadlocal)被 GC 回收，key 就变成 null 但是 value 仍存在，就内存泄漏了，解决方法：1. 使用完毕后调用 remove， 2. 将 threadlocal 定义为 static final，延长生命周期  
+强引用：有强引用的对象不会被回收  
+弱引用：只有弱引用的对象不会被回收
 
 ## 内存泄漏
 
