@@ -184,6 +184,10 @@ const int* const i;//指针不能乱指，值也不能变
 2. 修饰函数：如果传入变量，就运行期执行，如果传入常量，就编译期确定
 3. 修饰构造函数：编译期就创建对象（可能存在静态区或者直接嵌入指令）
 
+### consteval
+
+必须在编译期执行
+
 ## noexcept 关键字(c++11)
 
 声明一个函数不会抛出异常，如果真的有异常，就直接 terminate，便于编译器优化异常处理代码
@@ -207,12 +211,12 @@ MyClass* obj1 = (MyClass*)malloc(sizeof(MyClass)); // 构造函数不会执行�
 MyClass* obj2 = new MyClass(); // 构造函数自动执行
 ```
 
-malloc 返回 void\*，需强转，对于对象不会调用构造函数，不会初始化(可以是任意值)，通过 free 释放，对于数组需要手动计算大小，不可重载  
+malloc 只分配字节，返回 void\*，需强转，对于对象不会调用构造函数，不会初始化(可以是任意值)，通过 free 释放，对于数组需要手动计算大小，不可重载  
 new 返回对象指针，对于对象会调用构造函数，自动初始化(基本类型为 0)，通过 delete 释放，直接指明数组长度，可重载
 
 **malloc 多线程**
 通过互斥锁 mutex 保护共享数据结构  
-为每个线程维护一个私有堆，小对象分配直接在本地堆，避免锁  
+为每个线程维护一个私有堆，小对象分配直接在线程本地缓存（取决于分配器），避免锁  
 malloc 不可重入，被中断可能死锁
 
 ## inline 和普通函数的区别
@@ -226,21 +230,23 @@ inline 是用于实现的关键字，类中定义的成员函数默认 inline，
 
 ## 数组和指针的区别
 
-数组是一组连续的同类型元素，数组名是常量指针，不能修改指向，在传参时会退化为指针  
-指针是一个变量，存另一个变量的地址
+数组是一组连续的同类型元素，数组名是常量指针，不能修改指向，在传参时会退化为指针，sizeof 是整个数组的字节数  
+指针是一个变量，存另一个变量的地址，sizeof 是指针的字节数  
+在符号表中，数组存地址+元素类型+元素个数，指针存变量地址+元素类型
 
 ## 对象内存结构
 
 虚函数表+变量  
 如果是继承，那么子类对象包含所有父类对象的变量/函数  
 父类的成员在本类成员前面，方便类型兼容  
-多继承就有多个虚函数表
+多继承就有多个虚函数表  
+普通类方法存在静态区
 
-| 地址偏移 | 内容                                                  |
-| -------- | ----------------------------------------------------- |
-| 0x00     | 虚函数表指针 vptr（8 字节），虚函数表存在只读数据段中 |
-| 0x08     | int x（4 字节）                                       |
-| 0x0C     | 填充（4 字节）                                        |
+| 地址偏移 | 内容                                                            |
+| -------- | --------------------------------------------------------------- |
+| 0x00     | 虚函数表指针 vptr（8 字节），虚函数表存在只读数据段中（rodata） |
+| 0x08     | int x（4 字节）                                                 |
+| 0x0C     | 填充（4 字节）                                                  |
 
 ## 内存对齐
 
@@ -269,8 +275,9 @@ std::cout << alignof(AlignedStruct);  // 输出 8
 ## mmap memory map
 
 将磁盘上的文件内容映射进进程的虚拟内存空间，不需要使用 read() write()。必须以页为单位映射  
-这使得多个进程可访问同一块物理内存，  
-写入后需调用 msync() 保证数据落盘
+映射建立后，读写这段内存就等于读写文件，这使得多个进程可访问同一块物理内存
+私有映射：写时复制，对其他进程不可见，不回写文件  
+共享映射：直接修改共享页，对其他进程可见，会回写，需要同步
 
 ## 指针 vs 引用
 
@@ -403,6 +410,20 @@ struct A {
 };
 
 struct B {
+    std::shared_ptr<A> a_ptr;
+};
+// 循环依赖，无法析构
+```
+
+```c++
+struct A;
+struct B;
+
+struct A {
+    std::shared_ptr<B> b_ptr;
+};
+
+struct B {
     std::weak_ptr<A> a_ptr; // 不增加引用计数
 };
 
@@ -464,7 +485,37 @@ public:
 ## 完美转发
 
 一种模版编程技巧，可以在模版函数中无损地把参数传递下去，既保持左值右值特性，又避免多余的拷贝和错误的重载匹配。没有完美转发，传参时可能会丢失值类别信息
+依赖三个机制：万能引用，引用折叠，forward  
 forward 函数：有条件的转成右值，只有当原始参数是右值时才转
+
+```c++
+#include <iostream>
+#include <utility> // std::forward
+
+// 两个重载，区分左值和右值
+void print(int& x) {
+    std::cout << "Lvalue: " << x << "\n";
+}
+void print(int&& x) {
+    std::cout << "Rvalue: " << x << "\n";
+}
+
+// 包装函数，使用完美转发
+template<typename T>
+void wrapper(T&& arg) {
+    // 不用 forward：arg 永远是左值
+    // print(arg);
+
+    // 用 forward：保留原值类别
+    print(std::forward<T>(arg));
+}
+
+int main() {
+    int a = 42;
+    wrapper(a);        // a是左值，T推导为int&，输出 Lvalue: 42
+    wrapper(100);      // T推导为int,输出 Rvalue: 100
+}
+```
 
 ## 万能引用
 
@@ -472,7 +523,9 @@ T&&，类型是模版参数或 auto&&
 
 ## 引用折叠
 
-用来处理引用的引用这种语法上不允许的情况。只要有一个是左值，就是左值，只有两个都是右值，结果才是右值
+用来处理引用的引用这种语法上不允许的情况。
+若传入左值，T 是 int&，T&& = int& && = int&
+若传入右值，T 是 int，T&& = int&& = int&&
 
 ## 构造函数 拷贝构造函数 移动构造函数 析构函数
 
@@ -705,20 +758,39 @@ class D : public B, public C {};  // D 中只有一份 A::val
 基类通过 static cast 调用派生类的方法，编译器在编译期剧可以确定调用的目标
 
 ```c++
-template<typename Derived>
+template <typename Derived>
 class Base {
-	public:
-	void run() {
-		static_cast<Derived*>(this)->impl();
-	}
+public:
+    void interface() {
+        // 基类调用派生类实现
+        static_cast<Derived*>(this)->implementation();
+    }
 };
-class Foo : public Base<Foo> {
-	public:
-	void impl() { /* 编译期确定的实现 */ }
+
+// 派生类
+class Derived1 : public Base<Derived1> {
+public:
+    void implementation() {
+        std::cout << "Derived1::implementation()\n";
+    }
 };
+
+class Derived2 : public Base<Derived2> {
+public:
+    void implementation() {
+        std::cout << "Derived2::implementation()\n";
+    }
+};
+
+int main() {
+    Derived1 d1;
+    Derived2 d2;
+    d1.interface(); // 输出 Derived1::implementation()
+    d2.interface(); // 输出 Derived2::implementation()
+}
 ```
 
-**函数指针**
+**函数指针**  
 对象内部保存了一个函数指针，调用时直接跳转到对应实现
 
 ```c++
@@ -745,7 +817,8 @@ int main() {
 
 ## 延迟绑定
 
-运行时，根据对象的类型，才决定调用哪个函数
+运行时，根据对象的类型，才决定调用哪个函数  
+use case：虚函数多态，函数指针
 
 ## 内存管理 代码区 常量区 全局/静态区 data+bss 栈区 堆
 
@@ -805,14 +878,20 @@ int main() {
 | ⑤ | 算术类型转换（Conversion） | `int → double`, `short → float` |
 | ⑥ | 类类型转换（Class Conversion） | `Derived → Base` 或构造函数/转换运算符 |
 
-## 程序启动过程
+## 程序编译/启动过程
 
 预处理：处理#开头的指令，生成.i / .ii 文件，包含展开后的完整源代码
 编译：将预处理后的代码转换为汇编代码.s 文件（词法分析 - 语法分析 - 语义分析 - 构建抽象语法树 - 优化代码）
 汇编：将汇编代码转换为机器码，将.s 文件转为 .o/obj 目标文件，包含符号表，但不能直接运行，可能引用外部符号如库函数
 链接：将多个目标文件和库文件合并为可执行文件，符号解析，重定位，静态链接，动态链接，生成.exe(win) / 可执行文件(linux)
 装载：os 将可执行文件加载到内存，分配内存空间，加载代码段数据端，初始化运行环境，跳转到 main 开始执行
-运行：os 创建进程，分配资源，执行 main，结束后释放资源，退出进程
+**运行**
+创建进程，分配 pid，初始化进程控制块
+加载可执行文件，将 text/data 等映射到进程的虚拟地址空间
+加载动态库
+跳转到\_start 函数
+初始化全局/静态变量，执行 main
+退出 main，调用析构，释放进程/内核回收/关闭 fd
 
 **可执行文件中包含哪些部分**  
 文件头 file header：描述文件类型，目标平台，入口地址等  
@@ -826,6 +905,10 @@ int main() {
 重定位表 rel/rela：用于链接时调整地址引用，尤其是使用动态库时  
 调试信息表 debug：开启了-g，会包含源码行号、变量名等信息，供 gdb 调试使用  
 初始化段 init：存放程序启动和结束时自动执行的函数
+
+**动态链接和静态链接的区别**
+静态：在链接阶段把库代码拷贝进可执行文件，不依赖外部库 （.a, .lib）  
+动态：链接被推迟到程序装载时或运行时，可执行文件只包括库的符号引用，真正的库代码是运行的时候 os 的动态链接器加载(.so, .dll)
 
 ## 线程
 
@@ -919,9 +1002,39 @@ std::for_each(v.begin(), v.end(), [](int x) {
 函数对象是一个类的实例，它通过重载 () 运算符来模拟函数调用行为。还能利用类的特性，如成员变量，继承，多态  
 多用于 STL，替代函数指针，回调
 
+```c++
+struct Print {
+    void operator()(int x) const {
+        cout << x << " ";
+    }
+};
+
+int main() {
+    vector<int> v = {1, 2, 3};
+    for_each(v.begin(), v.end(), Print()); // 输出: 1 2 3
+}
+```
+
+## auto
+
+在抽象语法树中可以推导出真实类型，没有运行时的开销
+
+## 类型擦除
+
+泛型编程技巧，用固定的接口包装任意类型对象，把具体类型信息藏在实现里
+例：通过基类指针或引用操作对象，隐藏具体类型。
+用模版捕获任意类型对象
+
+```c++
+void call(std::function<void()> f) { f(); }
+
+call([] { std::cout << "Hello\n"; }); // lambda 类型被擦除成 std::function<void()>
+```
+
 ## gdb
 
 gnu debugger,用来调试 c++程序
+bt/frame/info locals/
 
 ## RAII
 
@@ -957,6 +1070,13 @@ lock.unlock();  // 手动释放锁
 
 **lock_guard**
 与 unique_lock 相似，但是他只支持构建时自动加锁析构时自动解锁
+
+```c++
+void increment() {
+        std::lock_guard<std::mutex> lock(mtx);
+        value++;
+    }
+```
 
 ## mutex c++11
 
@@ -1035,7 +1155,7 @@ cout << (*lb) << "\n";
 初始化是懒加载，首次访问才初始化  
 底层实现：
 
-1. 编译器将 threadlocal 变量标记为 TLS Thread Local Storage 类型，这些变量被放入 tbss/tdata 段
+1. 编译器将 threadlocal 变量标记为 TLS Thread Local Storage 类型，这些变量被放入 tbss/tdata 段（不是堆也不是栈）
 2. 操作系统为每个线程维护一个 TLS 内存，TCB 中包含一个指向 TLS 区的指针，线程切换时，TCB 和相关寄存器 fs gs 也会切换，从而访问正确的 TLS 区域
 
 ```c++
@@ -1050,8 +1170,8 @@ void thread_func(int id) {
 }
 
 int main() {
-    std::thread t1(thread_func, 1);
-    std::thread t2(thread_func, 2);
+    std::thread t1(thread_func, 1);// print 1
+    std::thread t2(thread_func, 2);// print 1
     t1.join();
     t2.join();
 }
@@ -1171,8 +1291,44 @@ std::atomic<int> counter(0);
 
 void increment() {
     for (int i = 0; i < 100000; ++i) {
-        counter.fetch_add(1); // 原子加
+        counter.fetch_add(1); // 原子加，有硬件支持就硬件（如x86的LOCK XADD），没有就CAS
     }
+}
+```
+
+**compare_exchange_weak vs compare_exchange_strong**
+比较当前值是否等于预期值，相等就更新为新值，不然更新预期值为当前值
+
+```c++
+int expected = 10;
+bool ok = a.compare_exchange_weak(expected, 20);
+// 如果a的当前值是10，就更新a为20，返回true
+// 不然就把a的当前值写给expcted，返回false
+```
+
+weak 可能有伪 false，即使 a==expected 也返回 false，目的是为了让 cpu 指令更高效，去使用更快的硬件 CAS 指令，通常会发反复 compare_exchange_weak
+
+## memomy order
+
+原子操作在不同线程之间的可见性和执行顺序，控制指令重排  
+memory_order_relaxed：只保证原子，不保证顺序,一般用于计数器  
+memory_order_acquire：获取操作，不允许它之后的读写被重排到它以前  
+memory_order_release：释放，不允许它之前到读写重拍到它之后  
+memory_order_acq_rel：同时具备 ac 和 rel  
+memory_order_seq_cst：最强，所有线程看到的顺序一致
+
+```c++
+std::atomic<bool> ready(false);
+int data = 0;
+
+void producer() {
+    data = 42;
+    ready.store(true, std::memory_order_release); // 发布数据
+}
+
+void consumer() {
+    while (!ready.load(std::memory_order_acquire)) { } // 等待数据可见
+    std::cout << data << "\n"; // 一定能看到 42
 }
 ```
 
@@ -1189,6 +1345,11 @@ void increment() {
 系统允许生成 core 文件：
 有写入权限：core 文件会写到当前目录或 /proc/sys/kernel/core_pattern 指定的位置
 程序未被安全显示：某些 setuid 程序默认禁止生成 core dump（可通过 /proc/sys/fs/suid_dumpable 配置）
+
+## elf readelf
+
+elf：可执行与可链接格式，是 linux 下二进制文件的标准格式
+readelf：查看 elf 的内部结构
 
 ## 交替打印 1234 abcd 成为 1a2b3c4d
 
@@ -1234,7 +1395,7 @@ void solve(int cas)
 }
 ```
 
-## 轮流打印 1-100
+## 轮流打印 1-100(condition variable)
 
 ```c++
 std::mutex mtx;
@@ -1264,6 +1425,49 @@ void solve(int cas)
 		threads[i].join();
 	}
 }
+```
+
+## 轮流打印 1-100(mutex)
+
+```c++
+std::mutex mtx;
+int cnt = 1;
+
+void printNumber(int num)
+{
+
+	while (true)
+	{
+		if (mtx.try_lock())
+		{
+			if (num == cnt)
+			{
+				cout << num << "\n";
+				cnt++;
+				mtx.unlock();
+				return;
+			}
+			else
+			{
+				mtx.unlock();
+			}
+		}
+	}
+}
+
+void solve(int cas)
+{
+	vector<thread> threads;
+	for (int i = 1; i <= 100; i++)
+	{
+		threads.emplace_back(printNumber, i);
+	}
+	for (int i = 0; i < threads.size(); i++)
+	{
+		threads[i].join();
+	}
+}
+
 ```
 
 ## LRUCache
@@ -1439,4 +1643,246 @@ public:
 		}
 	}
 };
+```
+
+## 文件 IO
+
+```c++
+fstream file("data.txt");
+string s;
+getline(file, s);
+file >> s;
+```
+
+## 快排
+
+```c++
+class Solution {
+public:
+    vector<int> sortArray(vector<int>& nums) {
+        srand((unsigned)time(nullptr));
+        quicksort(nums,0, nums.size()-1);
+        return nums;
+    }
+
+    void quicksort(vector<int>& nums, int left, int right){
+        if (left>=right) return;
+        int pivot = left+ rand()%(right-left+1);
+        int pivotValue = nums[pivot];
+        swap(nums[right], nums[pivot]);
+        int finalPos = left;
+        for (int i = left;i<right;i++){
+            if (nums[i]<pivotValue) {
+                swap(nums[i],nums[finalPos]);
+                finalPos++;
+            }
+        }
+        swap(nums[finalPos], nums[right]);
+        quicksort(nums, left, finalPos-1);
+        quicksort(nums,finalPos+1,right);
+    }
+};
+```
+
+## 堆排
+
+```c++
+class Solution {
+public:
+    vector<int> sortArray(vector<int>& nums) {
+        heapsort(nums);
+        return nums;
+    }
+
+    void heapsort(vector<int>& nums){
+        int n = nums.size()/2;
+        for (int i = n;i>=0;i--){
+            heapify(nums,i,nums.size()-1);
+        }
+        for (int i = 0;i<nums.size();i++){
+            swap(nums[0],nums[nums.size()-1-i]);
+            heapify(nums, 0, nums.size()-2-i);
+        }
+    }
+
+    void heapify(vector<int>& nums, int l, int r){
+        int cur = l;
+        while (cur<=r){
+            int larger = cur;
+            if (cur*2+1<=r && nums[cur*2+1]>nums[larger]){
+                larger = cur*2+1;
+            }
+            if (cur*2+2<=r && nums[cur*2+2]>nums[larger]){
+                larger = cur*2+2;
+            }
+            if (larger == cur){
+                return;
+            } else {
+                swap(nums[larger],nums[cur]);
+                cur = larger;
+            }
+        }
+
+    }
+};
+```
+
+## 无锁队列
+
+```c++
+template<typename T>
+class LockFreeQueue {
+private:
+    std::atomic<Node<T>*> head;
+    std::atomic<Node<T>*> tail;
+
+public:
+    LockFreeQueue() {
+        Node<T>* dummy = new Node<T>(T{}); // 哨兵节点
+        head.store(dummy);
+        tail.store(dummy);
+    }
+
+    ~LockFreeQueue() {
+        while (dequeue()); // 清空
+        delete head.load();
+    }
+
+    void enqueue(T value) {
+        Node<T>* newNode = new Node<T>(value);
+        Node<T>* oldTail;
+        while (true) {
+            oldTail = tail.load(std::memory_order_acquire);
+            Node<T>* next = oldTail->next.load(std::memory_order_acquire);
+            if (oldTail == tail.load(std::memory_order_acquire)) {
+                if (next == nullptr) {
+                    // 尝试把新节点挂到尾节点
+                    if (oldTail->next.compare_exchange_weak(next, newNode)) {
+                        // 移动 tail 指针
+                        tail.compare_exchange_weak(oldTail, newNode);
+                        return;
+                    }
+                } else {
+                    // tail 落后了，推进它
+                    tail.compare_exchange_weak(oldTail, next);
+                }
+            }
+        }
+    }
+
+    bool dequeue(T &result) {
+        Node<T>* oldHead;
+        while (true) {
+            oldHead = head.load(std::memory_order_acquire);
+            Node<T>* oldTail = tail.load(std::memory_order_acquire);
+            Node<T>* next = oldHead->next.load(std::memory_order_acquire);
+            if (oldHead == head.load(std::memory_order_acquire)) {
+                if (oldHead == oldTail) {
+                    if (next == nullptr) {
+                        return false; // 队列空
+                    }
+                    // tail 落后了，推进它
+                    tail.compare_exchange_weak(oldTail, next);
+                } else {
+                    result = next->value;
+                    if (head.compare_exchange_weak(oldHead, next)) {
+                        delete oldHead; // 释放旧的哨兵节点
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+};
+```
+
+## hashmap 线程安全
+
+```c++
+#include <iostream>
+#include <vector>
+#include <list>
+#include <mutex>
+#include <shared_mutex>
+#include <optional>
+#include <functional>
+
+template<typename Key, typename Value, typename Hash = std::hash<Key>>
+class ThreadSafeHashMap {
+private:
+    struct Bucket {
+        std::list<std::pair<Key, Value>> data;
+        mutable std::shared_mutex mtx; // 读写锁
+    };
+
+    std::vector<Bucket> buckets;
+    Hash hasher;
+
+    Bucket& get_bucket(const Key& key) const {
+        size_t index = hasher(key) % buckets.size();
+        return const_cast<Bucket&>(buckets[index]);
+    }
+
+public:
+    ThreadSafeHashMap(size_t num_buckets = 16) : buckets(num_buckets) {}
+
+    void insert(const Key& key, const Value& value) {
+        Bucket& bucket = get_bucket(key);
+        std::unique_lock lock(bucket.mtx); // 写锁
+        for (auto& kv : bucket.data) {
+            if (kv.first == key) {
+                kv.second = value; // 更新
+                return;
+            }
+        }
+        bucket.data.emplace_back(key, value);
+    }
+
+    std::optional<Value> get(const Key& key) const {
+        Bucket& bucket = get_bucket(key);
+        std::shared_lock lock(bucket.mtx); // 读锁
+        for (auto& kv : bucket.data) {
+            if (kv.first == key) {
+                return kv.second;
+            }
+        }
+        return std::nullopt;
+    }
+
+    void erase(const Key& key) {
+        Bucket& bucket = get_bucket(key);
+        std::unique_lock lock(bucket.mtx); // 写锁
+        for (auto it = bucket.data.begin(); it != bucket.data.end(); ++it) {
+            if (it->first == key) {
+                bucket.data.erase(it);
+                return;
+            }
+        }
+    }
+};
+
+int main() {
+    ThreadSafeHashMap<int, std::string> map(8);
+
+    // 多线程测试
+    #include <thread>
+    std::thread t1([&]() {
+        for (int i = 0; i < 100; i++) {
+            map.insert(i, "Value_" + std::to_string(i));
+        }
+    });
+
+    std::thread t2([&]() {
+        for (int i = 0; i < 100; i++) {
+            auto val = map.get(i);
+            if (val) {
+                std::cout << i << " => " << *val << "\n";
+            }
+        }
+    });
+
+    t1.join();
+    t2.join();
+}
+
 ```
