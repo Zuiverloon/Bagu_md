@@ -1886,3 +1886,23 @@ int main() {
 }
 
 ```
+
+## kmp
+
+```java
+int[] getF(String needle){
+        int[] flink = new int[needle.length()];
+        flink[0] = 0;
+        int j = 0;
+        for (int i = 1;i<needle.length();i++){
+            while (j>0 && needle.charAt(i)!=needle.charAt(j)){
+                j = flink[j-1];
+            }
+            if (needle.charAt(i)==needle.charAt(j)){
+                j++;
+            }
+            flink[i] = j;
+        }
+        return flink;
+    }
+```
