@@ -436,7 +436,7 @@ class A extends Thread{
 1.  实现 Runnable，重写 run
 
 ```java
-class B implements Runnable{
+class B implements Runnable
     @Override
     public void run(){
         System.out.println("B");
@@ -662,6 +662,12 @@ GC Roots → 灰色
 在新生代触发的是 minor GC，在老年代触发的是 major GC  
 新生代包括 eden space 和 s0，s1。eden 中都是新的对象，经过一次 gc（eden 空间满了会触发 minor gc） 后把 eden 和(s1/s0)存活的放入(s0/s1),保证 s1 和 s2 至少有一个是空的。当经过了一定次数后还存活的，就放入老年代。  
 永久代：存放类方法。类不再被使用了。（为解决内存不够的问题，jkd8 开始永久代被替换成 metaspace，当空间满可以自动清理垃圾）
+
+**垃圾回收触发时机**
+
+1. Minor GC：当 eden 区没有足够空间分配新对象时，高频速度快，会短暂 STW
+2. Major GC/Old GC：老年代空间不足（大量对象晋升到老年代），慢，STW
+3. Full GC：回收整个堆空间，当老年代空间不足、元空间空间不足，显式调用 System.gc
 
 ## Future vs Completeable Future
 

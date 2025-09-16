@@ -116,7 +116,7 @@ bin/kafka-console-consumer.sh --bootstrap-server <broker> --topic <topic-name> -
 2. 事务性生产者消费者（Transactional Messaging），生产者将一组消息以一个事务写入 kafka，消费者消费一组事务
 3. 手动提交偏移量，消息处理成功再 commit，避免消费者崩溃导致的重复消费
 4. 外部存储偏移量而不是 kafka 内部存储
-5. 消费端做幂等，，使用消息 ID 判断是否已经处理
+5. 消费端做幂等，使用消息 ID 判断是否已经处理
 
 ## broker 宕机的影响
 

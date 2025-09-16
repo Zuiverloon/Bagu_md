@@ -12,6 +12,8 @@
 ## General framework
 
 Part1: understand problem and establish design scope (5 min)
+functional requirement:feature?user?usage pattern?
+non-functional requirement: traffic? read-write ratio? latency
 At the end of this part, Should shortlist the feature(functional req), along with a few non-functional req
 
 Part2: high level design

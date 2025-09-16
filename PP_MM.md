@@ -56,7 +56,3 @@ kryo 序列化器不是 thread safe 的
 • T = Task: What was your responsibility or goal?
 • A = Action: What steps did you take to solve the problem?
 • R = Result: What was the outcome? Try to quantify it if possible.
-
-## druid
-
-支持 sql

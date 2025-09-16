@@ -311,6 +311,10 @@ TCP 连接由 4 元组决定{local IP, local port, remote IP, remote port}
     }
 ```
 
+## load balancer 负载均衡策略
+
+轮询，加权轮询（后端性能不均匀），最少连接，最短响应时间，源 IP 哈希，一致性哈希（对请求字段 hash），随机，dns
+
 ## select, poll, epoll 的区别
 
 他们都是用来监听多个 socket 读写事件

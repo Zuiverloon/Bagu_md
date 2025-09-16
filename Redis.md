@@ -144,7 +144,7 @@ redis 一次可以执行多个事务
 ## 过期策略
 
 1. 惰性删除：客户端访问某个 key，检查该 key 是否过期。不主动消耗 CPU，但是过期的 key 可能长期占用内存
-2. 定期删除：每隔一段时间抽取不嗯设置了过期时间的 key 检查。主动清理避免内存滞留，但无法保证所有 key 都及时删除
+2. 定期删除：每隔一段时间抽取设置了过期时间的 key 检查。主动清理避免内存滞留，但无法保证所有 key 都及时删除
 3. 内存淘汰：当 redis 使用的内存到达限制时，淘汰部分 key。淘汰策略：volatile-lru（设置了过期时间的 key 中淘汰最近最少使用的），allkeys-lru（所有 key 中最近最少使用的），volatile-ttl（淘汰剩余存活时间最短的），noeviction（不淘汰，但是拒绝写入），volatile-lfu（设置了过期时间中使用频率最少的），allkeys-lfu，allkeys-random，volatile-random
 
 ## 缓存穿透
