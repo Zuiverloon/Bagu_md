@@ -105,6 +105,10 @@ Built-in encryption
 Allowing multiple streams within a single connection
 Reducing handshake time
 
+## IP 协议
+
+负责数据包的寻址、路由、传输，无连接不可靠，靠上层保证可靠性
+
 ## 浏览器输入 url 发生什么
 
 1. dns query
@@ -582,7 +586,10 @@ int main() {
 ## 用户态，内核态
 
 两种运行级别，代表程序在不同权限下运行的状态。防止用户直接操作硬件或内核数据，且用户程序崩了不影响系统
-什么时候切换到内核态？系统调用如 read(), write()了；遇到异常如除 0，缺页，进入内核态执行异常处理程序；中断，如外设就绪向 cpu 发送中断
+**什么时候切换到内核态？**
+系统调用如 read(), write()了，调用 syscall 指令；  
+遇到异常如除 0，缺页，进入内核态执行异常处理程序；中断，如外设就绪向 cpu 发送中断，根据中断向量表决定跳转的位置  
+CPU 会进入特权模式 Ring 0，并跳转到内核态的入口地址
 
 ## 三层 cache 延迟时间（以 3GHz 主频换算）
 
