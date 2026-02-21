@@ -150,6 +150,601 @@ map:底层是红黑树
 unordered_set:底层是 hashtable
 set:底层是红黑树
 
+## 元编程 metaprogramming
+
+元编程就是：写“在编译期运行的程序”，让程序在运行前就自动生成代码、推导类型、做计算、优化逻辑。
+模板元编程（TMP）  
+constexpr 计算  
+类型推导与 type traits  
+if constexpr  
+折叠表达式
+
+# 各种标准
+
+## C++11
+
+🌟 影响最深的三大特性
+移动语义（性能革命）  
+lambda 表达式（现代 C++ 编程风格核心）  
+auto + range-for（让 C++ 更像现代语言）
+
+### auto
+
+编译器在编译器进行类型推导type deduction，机制与模版的类型推导基本一致
+**auto&& 为什么是万能引用？**
+本质上是模版类型T&&， 触发模版类型推导，遵循引用折叠原则，左值推导为T&，右值推导为T
+
+### range base for循环
+
+```c++
+for (auto& element : container) {
+     // 使用 element
+}
+// 等价于
+for (auto it = begin(container); it != end(container); ++it) {
+    auto element = *it;
+}
+
+// 使用auto可能会导致拷贝，就慢了，可用const auto&避免拷贝
+for (const auto& x : vec) { }   // 不拷贝
+```
+
+### enum class 强类型枚举
+
+```c++
+enum class Color {
+    Red, Green
+};
+```
+
+使用时必须带有Enum::Value的写法  
+强类型，转int必须static_cast
+强隔离，不同enum class不能互相比较
+
+### lambda
+
+轻量级的匿名函数语法
+
+```
+[capture](parameters) -> return_type {
+    function_body
+};
+```
+
+**捕获列表**  
+lambda 可以访问外部变量，但必须通过捕获列表声明  
+| 捕获方式 | 语法示例 | 说明 |
+|------------------|--------------------|--------------------------------------------|
+| 不捕获 | `[]` | 不访问任何外部变量 |
+| 值捕获 | `[x]` | 拷贝变量 `x` 的值 |
+| 引用捕获 | `[&x]` | 捕获变量 `x` 的引用 |
+| 隐式值捕获 | `[=]` | 按值捕获所有使用的外部变量 |
+| 隐式引用捕获 | `[&]` | 按引用捕获所有使用的外部变量 |
+| 混合捕获 | `[=, &y]` | 按值捕获其他变量，引用捕获 `y` |
+| 初始化捕获（C++14 起） | `[z = x + 5]` | 捕获并初始化一个新变量 `z` |
+| 可变捕获（mutable） | `[x]() mutable` | 允许修改值捕获的变量（默认是 const） |
+
+**编译器如何处理 lambda**  
+lambda 会被编译器转换为一个匿名类，重载 operator(),本质上是一个函数对象 functor，捕获的变量会变成类的成员变量。
+
+**高级用法**  
+可变 lambda(mutable)，默认 lambda 是 const 的，不能修改捕获的值，使用 mutable 可以解除限制
+
+```c++
+int x = 10;
+auto f = [x]() mutable {
+x += 5;
+return x;
+};
+```
+
+**与std::function的区别**
+lambda是编译器生成的独立类类型，调用时直接内联，开销小性能高，类型是唯一匿名不可复用的
+std::function是运行时多态，通用但有开销，内部使用类型擦除
+
+**Lambda 与 STL 算法结合**
+
+```c++
+std::vector<int> v = {1, 2, 3, 4, 5};
+std::for_each(v.begin(), v.end(), [](int x) {
+    std::cout << x * x << " ";
+});
+
+```
+
+### 右值引用
+
+**左值，右值，左值引用，右值引用**
+左：可出现在赋值号左边，表示有持久地址的对象，能取地址  
+右：只能出现在赋值号右边，不可取地址
+
+左值引用&：只能绑定左值，，用于避免拷贝
+
+```c++
+int x = 10;
+int& ref = x;     // 左值引用绑定变量 x
+ref = 20;         // 修改 x 的值
+std::cout << x;   // 输出 20
+
+```
+
+右值引用&&：只能绑定右值，用于实现移动语义，避免拷贝，可用于延长右值生命周期
+
+```c++
+int&& r1 = 42;            // 绑定字面常量
+int&& r2 = 5 + 3;         // 绑定表达式结果
+std::string&& s = std::string("hello");  // 绑定临时对象
+```
+
+### move 方法
+
+将一个对象显示转换为右值引用，触发移动语义，避免拷贝。不是移动，而是允许移动，告诉编译器不需要这个对象的原始值了，触发移动构造函数和移动赋值运算。
+
+```c++
+std::string a = "hello";
+std::string b = a;              // 拷贝构造：复制字符串内容
+std::string c = std::move(a);   // 移动构造：转移 a 的资源，a 变为空
+
+std::string createMessage() {
+    std::string msg = "Hi there!";
+    return std::move(msg);  // 显式触发移动构造（但 C++17 起编译器自动优化）
+}
+
+std::vector<std::string> vec;
+std::string s = "data";
+vec.push_back(std::move(s));  // 避免拷贝，直接移动资源
+
+class MyClass {
+    std::string name;
+public:
+    MyClass(std::string&& n) : name(std::move(n)) {}  // 移动构造
+};
+
+```
+
+对 const 对象使用 move 不会触发移动构造，因为移动构造需要修改源对象
+
+### 完美转发
+
+一种模版编程技巧，可以在模版函数中无损地把参数传递下去，既保持左值右值特性，又避免多余的拷贝和错误的重载匹配。没有完美转发，传参时可能会丢失值类别信息
+依赖三个机制：万能引用，引用折叠，forward  
+forward 函数：有条件的转成右值，只有当原始参数是右值时才转
+
+```c++
+#include <iostream>
+#include <utility> // std::forward
+
+// 两个重载，区分左值和右值
+void print(int& x) {
+    std::cout << "Lvalue: " << x << "\n";
+}
+void print(int&& x) {
+    std::cout << "Rvalue: " << x << "\n";
+}
+
+// 包装函数，使用完美转发
+template<typename T>
+void wrapper(T&& arg) {
+    // 不用 forward：arg 永远是左值
+    // print(arg);
+
+    // 用 forward：保留原值类别
+    print(std::forward<T>(arg));
+}
+
+int main() {
+    int a = 42;
+    wrapper(a);        // a是左值，T推导为int&，输出 Lvalue: 42
+    wrapper(100);      // T推导为int,输出 Rvalue: 100
+}
+```
+
+如果函数参数为左值引用，不能接受右值；如果参数为右值引用，不能接受左值。但是const int&可以接受右值。
+为什么非const 左值引用不能绑定右值？左值引用表示可以修改对象，但是右值是临时的不可修改的，const T&保证不修改，所以可接受
+
+### 万能引用
+
+T&&，类型是模版参数或 auto&&
+
+### 引用折叠
+
+用来处理引用的引用这种语法上不允许的情况。
+若传入左值，T 是 int&，T&& = int& && = int&
+若传入右值，T 是 int，T&& = int&& = int&&
+
+### constexpr
+
+让函数的值在编译器就确定
+
+1. 修饰变量：编译期常量，比 const 更严格，const 允许运行期常量
+2. 修饰函数：如果传入变量，就运行期执行，如果传入常量，就编译期确定
+3. 修饰构造函数：编译期就创建对象（可能存在静态区或者直接嵌入指令）
+
+### noexcept 关键字
+
+声明一个函数不会抛出异常，如果真的有异常，就直接 terminate，便于编译器优化异常处理代码
+
+```c++
+void foo() noexcept {
+    // 函数承诺不会抛出异常
+}
+
+// 条件noexcept
+template <typename T>
+void bar(T t) noexcept(std::is_nothrow_copy_constructible<T>::value) {
+    // 根据类型特性决定是否 noexcept
+}
+
+```
+
+### 智能指针
+
+封装了原始指针的类，自动管理动态内存资源。智能指针对象创建时，自动获取资源，离开作用域时自动释放，防止悬空、内存泄漏  
+unique_ptr 独占所有权，不能复制，只能移动，析构自动调用 delete。不允许拷贝构造/赋值，只允许移动构造/复制
+
+```c++
+#include <memory>
+std::unique_ptr<int> p1 = std::make_unique<int>(42);
+// std::unique_ptr<int> p2 = p1; ❌ 不允许复制
+std::unique_ptr<int> p2 = std::move(p1); // ✅ 所有权转移
+```
+
+```c++
+#include <iostream>
+
+template<typename T>
+class UniquePtr {
+private:
+    T* ptr;
+
+public:
+    // 构造函数
+    explicit UniquePtr(T* p = nullptr) : ptr(p) {}
+
+    // 禁止拷贝构造和拷贝赋值
+    UniquePtr(const UniquePtr&) = delete;
+    UniquePtr& operator=(const UniquePtr&) = delete;
+
+    // 移动构造
+    UniquePtr(UniquePtr&& other) noexcept : ptr(other.ptr) {
+        other.ptr = nullptr;
+    }
+
+    // 移动赋值
+    UniquePtr& operator=(UniquePtr&& other) noexcept {
+        if (this != &other) {
+            delete ptr;         // 释放当前资源
+            ptr = other.ptr;    // 接管资源
+            other.ptr = nullptr;
+        }
+        return *this;
+    }
+
+    // 析构函数
+    ~UniquePtr() {
+        delete ptr;
+    }
+
+    // 获取原始指针
+    T* get() const { return ptr; }
+
+    // 解引用操作符
+    T& operator*() const { return *ptr; }
+    T* operator->() const { return ptr; }
+
+    // 释放所有权并返回原始指针
+    T* release() {
+        T* temp = ptr;
+        ptr = nullptr;
+        return temp;
+    }
+
+    // 重置指针
+    void reset(T* p = nullptr) {
+        if (ptr != p) {
+            delete ptr;
+            ptr = p;
+        }
+    }
+
+    // 检查是否为空
+    explicit operator bool() const { return ptr != nullptr; }
+};
+```
+
+shared_ptr 共享所有权，引用计数管理资源，适合多个对象共享资源
+
+```c++
+#include <memory>
+std::shared_ptr<int> sp1 = std::make_shared<int>(100);
+std::shared_ptr<int> sp2 = sp1; // 引用计数 +1
+
+```
+
+weak_ptr 弱引用，不增加引用计数，打破 shared_ptr 循环引用。通过 lock 方法确定资源是否被释放，被释放就不应该访问
+
+```c++
+struct A;
+struct B;
+
+struct A {
+    std::shared_ptr<B> b_ptr;
+};
+
+struct B {
+    std::shared_ptr<A> a_ptr;
+};
+// 循环依赖，无法析构
+```
+
+```c++
+struct A;
+struct B;
+
+struct A {
+    std::shared_ptr<B> b_ptr;
+};
+
+struct B {
+    std::weak_ptr<A> a_ptr; // 不增加引用计数
+};
+
+//weakptr经典用法
+std::shared_ptr<int> sp = std::make_shared<int>(10);
+std::weak_ptr<int> wp = sp;
+if (auto p = wp.lock()) {
+    // p 是 shared_ptr，可以安全使用对象
+    std::cout << *p;
+} else {
+    // 对象已经被释放
+}
+
+```
+
+控制块：负责管理 shared，weakptr 的生命周期，创建一个 sharedptr 就会创建一个控制块，拷贝 sharedptr 就让强引用+1，销毁一个就-1，强引用变 0 时，调用删除器释放资源，但是控制块仍然存在直到弱引用也变为 0
+
+### 线程
+
+std::thread
+
+```c++
+#include <iostream>
+#include <thread>
+
+void hello() {
+    std::cout << "Hello from thread!\n";
+}
+
+int main() {
+    std::thread t(hello);  // 创建线程
+    t.join();              // 等待线程结束
+}
+
+
+std::thread t([] {
+    std::cout << "Hello from lambda thread!\n";
+});
+t.join();
+// ✅ 传递参数
+void print_id(int id) {
+    std::cout << "Thread ID: " << id << "\n";
+}
+std::thread t(print_id, 42);  // 按值传递
+t.join();
+```
+
+detach 方法让线程在后台独立运行，不再受主线程控制，适用于写日志、异步加载场景
+
+```c++
+std::thread t([]{
+    // 子线程任务
+});
+t.detach();   // 分离线程
+```
+
+### mutex
+
+实现互斥访问的核心类，lock unlock
+c++11 之前，只能通过 pthread（unix/linux）来实现线程间的互斥访问
+
+```c++
+// 没有mutex
+#include <pthread.h>
+pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+
+void* thread_func(void*) {
+    pthread_mutex_lock(&mtx);   // 加锁
+    // 临界区
+    pthread_mutex_unlock(&mtx); // 解锁
+    return nullptr;
+}
+
+//有了mutex
+#include <mutex>
+#include <thread>
+
+std::mutex mtx;
+int counter = 0;
+
+void work() {
+    mtx.lock();        // 加锁
+    ++counter;         // 临界区
+    mtx.unlock();      // 解锁
+
+}
+
+// 可以和lock_guard搭配使用，是RAII自动管理
+std::lock_guard<std::mutex> lock(m); // 构造时加锁/析构时解锁
+```
+
+## C++14
+
+### 泛型 lambda
+
+本质上是编译器为每种类型生成一个模版
+
+```c++
+auto print = [](auto x) {
+    std::cout << x << std::endl;
+};
+```
+
+### 变量模版
+
+让常量、全局变量、静态变量等也能根据类型进行泛化。
+
+```c++
+template<typename T>
+constexpr T pi = T(3.1415926535897932385);
+
+double x = pi<double>;
+float y = pi<float>;
+```
+
+### relaxed constexpr
+
+可以写多行表达式
+
+```c++
+constexpr int foo(int x) {
+    int y = x * 2;
+    return y + 3;
+}
+```
+
+## C++17
+
+### if/switch初始化语句
+
+```c++
+if (auto it = m.find(key); it != m.end()) {
+    ...
+}
+
+switch (int x = foo(); x) {
+    case 1: ...
+}
+
+```
+
+### 结构化绑定
+
+```c++
+auto [x, y] = std::pair{1, 2};
+auto [key, value] = std::map<int,int>{{1,2}}.begin();
+
+```
+
+### 折叠表达式
+
+类似js的reduce,有四种折叠方式
+左折叠：(... + args) = ((arg1 + arg2) + arg3) + ...
+右折叠：(args + ...) = arg1 + (arg2 + (arg3 + ...))
+带初始值的左折叠：(init + ... + args)  
+带初始值的右折叠：(args + ... + init)
+
+```c++
+template<typename... Args>
+auto sum(Args... args) {
+    return (args + ...);   // 右折叠
+}
+
+```
+
+### std::optional / std::variant / std::any（三大类型）
+
+**std::optional**
+可能有值，也可能没有
+
+```c++
+std::optional<int> getValue(bool ok) {
+    if (ok) return 42;
+    return std::nullopt;  // 没有值
+}
+
+auto v = getValue(true);
+if (v) {
+    std::cout << *v;  // 42
+}
+
+```
+
+**std::variant**
+可以存储多个类型之一，但是必须是这些类型中的某一个
+
+```c++
+std::variant<int, std::string> v;
+
+v = 10;
+v = std::string("hello");
+
+std::visit([](auto&& value){ using T = std::decay_t<decltype(value)>; if constexpr (std::is_same_v<T, int>) { std::cout << "int: " << value; } else if constexpr (std::is_same_v<T, std::string>) { std::cout << "string: " << value; } }, v);
+```
+
+**std::any**
+运行时类型擦除，类似java object或python的动态类型
+
+```c++
+std::any a = 10;
+a = std::string("hello");
+if (a.type() == typeid(std::string)) {
+    std::cout << std::any_cast<std::string>(a); // 用any_cast做类型转换
+}
+```
+
+### std::string_view（零拷贝字符串视图）
+
+指向一段连续字符序列的引用，避免不必要拷贝。只保存一个const char\*指针和size_t
+在c++17之前，如果参数是const string& 并传入 字符串常量，会构造一个string，产生堆分配+拷贝
+
+```c++
+foo("hello");        // 不分配内存
+foo(str);            // 不拷贝
+foo(str.substr(1));  // 不拷贝
+std::string_view sv = "hello world"; // 可以，字符串常量是const char[12],存在静态存储区，生命周期贯穿整个程序
+std::cout << sv.substr(0, 5);  // "hello"
+std::string_view sv = std::string("hello"); // 不可以❌，string("hello")是一个临时对象，生命周期只持续到这一行结束
+
+
+```
+
+### constexpr if
+
+在编译期进行条件判断的语法。 不满足条件的分支会在编译期直接被丢弃，不会参与编译。
+一般用在配合折叠表达式/访问variant时区分类型
+
+```c++
+template<typename T>
+void print(T value) {
+    if constexpr (std::is_integral_v<T>) {
+        std::cout << "int: " << value;
+    } else {
+        std::cout << "other: " << value;
+    }
+}
+
+std::visit([](auto&& v){
+    using T = std::decay_t<decltype(v)>;
+    if constexpr (std::is_same_v<T, int>)
+        std::cout << "int";
+    else
+        std::cout << "string";
+}, var);
+
+```
+
+## C++20
+
+### concepts
+
+### modules
+
+### coroutine
+
+### ranges
+
+## C++23
+
 # 面试题
 
 ## static 关键字
@@ -176,21 +771,9 @@ const int* const i;//指针不能乱指，值也不能变
 修饰函数返回值，返回只读，不可被修改  
 修饰成员函数，表示函数不修改对象状态
 
-### constexpr
-
-让函数的值在编译器就确定
-
-1. 修饰变量：编译期常量，比 const 更严格，const 允许运行期常量
-2. 修饰函数：如果传入变量，就运行期执行，如果传入常量，就编译期确定
-3. 修饰构造函数：编译期就创建对象（可能存在静态区或者直接嵌入指令）
-
 ### consteval
 
 必须在编译期执行
-
-## noexcept 关键字(c++11)
-
-声明一个函数不会抛出异常，如果真的有异常，就直接 terminate，便于编译器优化异常处理代码
 
 ## malloc 和 new 的区别
 
@@ -320,218 +903,6 @@ Student func(){
 Student stu = func(); // 为了防止对象被销毁，编译器用拷贝构造函数生成临时对象，然后返回的是临时对象
 
 ```
-
-## 智能指针
-
-封装了原始指针的类，自动管理动态内存资源。智能指针对象创建时，自动获取资源，离开作用域时自动释放，防止悬空、内存泄漏  
-unique_ptr 独占所有权，不能复制，只能移动，析构自动调用 delete。不允许拷贝构造/赋值，只允许移动构造/复制
-
-```c++
-#include <memory>
-std::unique_ptr<int> p1 = std::make_unique<int>(42);
-// std::unique_ptr<int> p2 = p1; ❌ 不允许复制
-std::unique_ptr<int> p2 = std::move(p1); // ✅ 所有权转移
-```
-
-```c++
-#include <iostream>
-
-template<typename T>
-class UniquePtr {
-private:
-    T* ptr;
-
-public:
-    // 构造函数
-    explicit UniquePtr(T* p = nullptr) : ptr(p) {}
-
-    // 禁止拷贝构造和拷贝赋值
-    UniquePtr(const UniquePtr&) = delete;
-    UniquePtr& operator=(const UniquePtr&) = delete;
-
-    // 移动构造
-    UniquePtr(UniquePtr&& other) noexcept : ptr(other.ptr) {
-        other.ptr = nullptr;
-    }
-
-    // 移动赋值
-    UniquePtr& operator=(UniquePtr&& other) noexcept {
-        if (this != &other) {
-            delete ptr;         // 释放当前资源
-            ptr = other.ptr;    // 接管资源
-            other.ptr = nullptr;
-        }
-        return *this;
-    }
-
-    // 析构函数
-    ~UniquePtr() {
-        delete ptr;
-    }
-
-    // 获取原始指针
-    T* get() const { return ptr; }
-
-    // 解引用操作符
-    T& operator*() const { return *ptr; }
-    T* operator->() const { return ptr; }
-
-    // 释放所有权并返回原始指针
-    T* release() {
-        T* temp = ptr;
-        ptr = nullptr;
-        return temp;
-    }
-
-    // 重置指针
-    void reset(T* p = nullptr) {
-        if (ptr != p) {
-            delete ptr;
-            ptr = p;
-        }
-    }
-
-    // 检查是否为空
-    explicit operator bool() const { return ptr != nullptr; }
-};
-```
-
-shared_ptr 共享所有权，引用计数管理资源，适合多个对象共享资源
-
-```c++
-#include <memory>
-std::shared_ptr<int> sp1 = std::make_shared<int>(100);
-std::shared_ptr<int> sp2 = sp1; // 引用计数 +1
-
-```
-
-weak_ptr 弱引用，不增加引用计数，打破 shared_ptr 循环引用。通过 lock 方法确定资源是否被释放，被释放就不应该访问
-
-```c++
-struct A;
-struct B;
-
-struct A {
-    std::shared_ptr<B> b_ptr;
-};
-
-struct B {
-    std::shared_ptr<A> a_ptr;
-};
-// 循环依赖，无法析构
-```
-
-```c++
-struct A;
-struct B;
-
-struct A {
-    std::shared_ptr<B> b_ptr;
-};
-
-struct B {
-    std::weak_ptr<A> a_ptr; // 不增加引用计数
-};
-
-```
-
-控制块：负责管理 shared，weakptr 的生命周期，创建一个 sharedptr 就会创建一个控制块，拷贝 sharedptr 就让强引用+1，销毁一个就-1，强引用变 0 时，调用删除器释放资源，但是控制块仍然存在直到弱引用也变为 0
-
-## 左值，右值，左值引用，右值引用
-
-左：可出现在赋值号左边，表示有持久地址的对象，能取地址  
-右：只能出现在赋值号右边，不可取地址
-
-左值引用&：只能绑定左值，，用于避免拷贝
-
-```c++
-int x = 10;
-int& ref = x;     // 左值引用绑定变量 x
-ref = 20;         // 修改 x 的值
-std::cout << x;   // 输出 20
-
-```
-
-右值引用&&：只能绑定右值，用于实现移动语义，避免拷贝，可用于延长右值生命周期
-
-```c++
-int&& r1 = 42;            // 绑定字面常量
-int&& r2 = 5 + 3;         // 绑定表达式结果
-std::string&& s = std::string("hello");  // 绑定临时对象
-```
-
-## move 方法
-
-将一个对象显示转换为右值引用，触发移动语义，避免拷贝。不是移动，而是允许移动，告诉编译器不需要这个对象的原始值了，触发移动构造函数和移动赋值运算。
-
-```c++
-std::string a = "hello";
-std::string b = a;              // 拷贝构造：复制字符串内容
-std::string c = std::move(a);   // 移动构造：转移 a 的资源，a 变为空
-
-std::string createMessage() {
-    std::string msg = "Hi there!";
-    return std::move(msg);  // 显式触发移动构造（但 C++17 起编译器自动优化）
-}
-
-std::vector<std::string> vec;
-std::string s = "data";
-vec.push_back(std::move(s));  // 避免拷贝，直接移动资源
-
-class MyClass {
-    std::string name;
-public:
-    MyClass(std::string&& n) : name(std::move(n)) {}  // 移动构造
-};
-
-```
-
-对 const 对象使用 move 不会触发移动构造，因为移动构造需要修改源对象
-
-## 完美转发
-
-一种模版编程技巧，可以在模版函数中无损地把参数传递下去，既保持左值右值特性，又避免多余的拷贝和错误的重载匹配。没有完美转发，传参时可能会丢失值类别信息
-依赖三个机制：万能引用，引用折叠，forward  
-forward 函数：有条件的转成右值，只有当原始参数是右值时才转
-
-```c++
-#include <iostream>
-#include <utility> // std::forward
-
-// 两个重载，区分左值和右值
-void print(int& x) {
-    std::cout << "Lvalue: " << x << "\n";
-}
-void print(int&& x) {
-    std::cout << "Rvalue: " << x << "\n";
-}
-
-// 包装函数，使用完美转发
-template<typename T>
-void wrapper(T&& arg) {
-    // 不用 forward：arg 永远是左值
-    // print(arg);
-
-    // 用 forward：保留原值类别
-    print(std::forward<T>(arg));
-}
-
-int main() {
-    int a = 42;
-    wrapper(a);        // a是左值，T推导为int&，输出 Lvalue: 42
-    wrapper(100);      // T推导为int,输出 Rvalue: 100
-}
-```
-
-## 万能引用
-
-T&&，类型是模版参数或 auto&&
-
-## 引用折叠
-
-用来处理引用的引用这种语法上不允许的情况。
-若传入左值，T 是 int&，T&& = int& && = int&
-若传入右值，T 是 int，T&& = int&& = int&&
 
 ## 构造函数 拷贝构造函数 移动构造函数 析构函数
 
@@ -916,93 +1287,6 @@ use case：虚函数多态，函数指针
 静态：在链接阶段把库代码拷贝进可执行文件，不依赖外部库 （.a, .lib）  
 动态：链接被推迟到程序装载时或运行时，可执行文件只包括库的符号引用，真正的库代码是运行的时候 os 的动态链接器加载(.so, .dll)
 
-## 线程
-
-std::thread
-
-```c++
-#include <iostream>
-#include <thread>
-
-void hello() {
-    std::cout << "Hello from thread!\n";
-}
-
-int main() {
-    std::thread t(hello);  // 创建线程
-    t.join();              // 等待线程结束
-}
-
-// lambda
-std::thread t([] {
-    std::cout << "Hello from lambda thread!\n";
-});
-t.join();
-// ✅ 传递参数
-void print_id(int id) {
-    std::cout << "Thread ID: " << id << "\n";
-}
-std::thread t(print_id, 42);  // 按值传递
-t.join();
-```
-
-detach 方法让线程在后台独立运行，不再可控，适用于写日志、异步加载场景
-
-## lambda（c++11）
-
-轻量级的匿名函数语法
-
-```
-[capture](parameters) -> return_type {
-    function_body
-};
-```
-
-**捕获列表**  
-lambda 可以访问外部变量，但必须通过捕获列表声明  
-| 捕获方式 | 语法示例 | 说明 |
-|------------------|--------------------|--------------------------------------------|
-| 不捕获 | `[]` | 不访问任何外部变量 |
-| 值捕获 | `[x]` | 拷贝变量 `x` 的值 |
-| 引用捕获 | `[&x]` | 捕获变量 `x` 的引用 |
-| 隐式值捕获 | `[=]` | 按值捕获所有使用的外部变量 |
-| 隐式引用捕获 | `[&]` | 按引用捕获所有使用的外部变量 |
-| 混合捕获 | `[=, &y]` | 按值捕获其他变量，引用捕获 `y` |
-| 初始化捕获（C++14 起） | `[z = x + 5]` | 捕获并初始化一个新变量 `z` |
-| 可变捕获（mutable） | `[x]() mutable` | 允许修改值捕获的变量（默认是 const） |
-
-**编译器如何处理 lambda**  
-lambda 会被编译器转换为一个匿名类，重载 operator(),本质上是一个函数对象 functor，捕获的变量会变成类的成员变量。
-
-**高级用法**  
-可变 lambda(mutable)，默认 lambda 是 const 的，不能修改捕获的值，使用 mutable 可以解除限制
-
-```c++
-int x = 10;
-auto f = [x]() mutable {
-x += 5;
-return x;
-};
-```
-
-泛型 lambda(c++14)
-
-```c++
-auto print = [](auto x) {
-    std::cout << x << std::endl;
-};
-```
-
-Lambda 与 STL 算法结合
-
-```c++
-std::vector<int> v = {1, 2, 3, 4, 5};
-std::for_each(v.begin(), v.end(), [](int x) {
-    std::cout << x * x << " ";
-});
-
-```
-
 ## 函数对象
 
 函数对象是一个类的实例，它通过重载 () 运算符来模拟函数调用行为。还能利用类的特性，如成员变量，继承，多态  
@@ -1082,24 +1366,6 @@ void increment() {
         std::lock_guard<std::mutex> lock(mtx);
         value++;
     }
-```
-
-## mutex c++11
-
-实现互斥访问的核心类，lock unlock
-c++11 之前，只能通过 pthread（unix/linux）来实现线程间的互斥访问
-
-```c++
-#include <pthread.h>
-
-pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
-
-void* thread_func(void*) {
-    pthread_mutex_lock(&mtx);   // 加锁
-    // 临界区
-    pthread_mutex_unlock(&mtx); // 解锁
-    return nullptr;
-}
 ```
 
 ## condition_variable
