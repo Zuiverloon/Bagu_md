@@ -446,7 +446,7 @@ LRU：最近最久未使用。实现为 index 索引+双向链表
 
 虚拟内存：os 通过 MMU 模拟出来的抽象地址空间，程序认为自己有连续且充足的空间
 物理内存：真实存在的硬件内存，是 CPU 可直接访问的
-页表：将虚拟地址映射到物理地址，每个进程有自己的页表，如果页不在内存中，则触发缺页中断。一般 CPU 先查 TLB（Translation Lookaside buffer），再查页表
+页表：将虚拟地址映射到物理地址，每个进程有自己的页表，如果页不在内存中，则触发缺页中断。一般 CPU 先查 TLB（Translation Lookaside buffer），再查页表，一页里的地址都是连续的，一页大概16KB
 TLB：缓存虚拟页号到物理页号的映射
 
 ## 图灵完备
@@ -591,13 +591,6 @@ int main() {
 遇到异常如除 0，缺页，进入内核态执行异常处理程序；中断，如外设就绪向 cpu 发送中断，根据中断向量表决定跳转的位置  
 CPU 会进入特权模式 Ring 0，并跳转到内核态的入口地址
 
-## 三层 cache 延迟时间（以 3GHz 主频换算）
-
-L1：3-5 cycle， 1ns，每个核心独享，容量小（32-128KB）
-L2：10-20 cycle， 3-7ns，每个核心独享或半共享，256KB-1MB
-L3：30-50 cycle，10-20ns，多核心共享，2-64MB
-主存 DRAM：200-300 cycle，70-100ns，GB 级别的容量
-
 ## 服务器 cpu 占用高的原因 如何排查
 
 应用层：死循环或递归，频繁 GC，SQL 全表扫描
@@ -677,3 +670,45 @@ inode 索引节点/block 数据块 元数据与数据分离
 启动第一个用户进程 `/lib/systemd/systemd`
 初始化，挂载剩余的文件系统，启动必要系统服务如网络，日志，定时任务
 登陆
+
+# CPU
+
+## 三层 cache 延迟时间（以 3GHz 主频换算）
+
+L1：3-5 cycle， 1ns，每个核心独享，容量小（32-128KB）
+L2：10-20 cycle， 3-7ns，每个核心独享或半共享，256KB-1MB
+L3：30-50 cycle，10-20ns，多核心共享，2-64MB
+主存 DRAM：200-300 cycle，70-100ns，GB 级别的容量
+
+## store buffer
+
+cpu执行写入操作时的临时写入队列，写入先进入store buffer，再异步刷新到cacheline。因为是异步的，写入变量的顺序可能不一定，会导致多线程下数据可见性问题。
+
+```c++
+data = 42;
+flag.store(true, std::memory_order_release);
+```
+
+使用acquire/release内存屏障，会强制data的写入比flag早
+
+## cacheline
+
+结构：tag(地址标签，cpu通过tag找到某个内存地址对应的数据)+MESI状态+valid bit + 64B数据
+CPU缓存中数据传输与存储的最小单位，cpu访问某内存，不会只取一个字节，会把整个cacheline都加载到缓存  
+一个cacheline一般为64B  
+可能导致伪共享问题(false sharing)：两个线程修改不同变量，但是在同一个cacheline中，导致缓存频繁失效，性能暴跌。 如何解决：独占cacheline(c++17 hardware_destructive_interference_size)，手动alignas(64)对齐64B
+
+## MESI 缓存一致性核心机制
+
+每个cacheline都有四种状态
+Modified：本核心修改过，内存中是旧的
+Exclusive：本核心独占，没修改过
+Shared：多核心独占，未修改
+Invalid：数据无效
+
+## 内核态vs用户态
+
+用户态：运行普通应用程序，不能直接访问硬件
+内核态：权限最高，可以访问所有内存、特权指令、操作硬件。
+**为什么上下文切换比内核态切换开销更大？**  
+内核态是同一个进程、线程内部切换，地址空间不变、缓存TLB页表等都有效。上下文切换需保存恢复所有寄存器状态，不同进程切换还会有TLB失效。

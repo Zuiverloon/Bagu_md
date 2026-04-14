@@ -577,6 +577,29 @@ void work() {
 std::lock_guard<std::mutex> lock(m); // 构造时加锁/析构时解锁
 ```
 
+### std::decay
+
+模拟函数参数传递时的类型调整规则。移除const、volatile、引用，将数组类型转换为指针，将函数转换为函数指针。
+
+```c++
+using T1 = std::decay<int&>::type;     // int
+using T2 = std::decay<const int>::type; // int
+using T3 = std::decay<int[5]>::type;   // int*
+using T4 = std::decay<void(int)>::type; // void(*)(int)
+```
+
+### std::ref, std::cref
+
+生成reference_wrapper类型的对象，有些标准库组件在存储参数时会按值拷贝，如果想传递引用，就需要引用包装器。
+
+```c++
+void f(int& x) {
+    x += 1;
+}
+int a = 10;
+std::thread t(f, std::ref(a)); // ✔ 传引用
+```
+
 ## C++14
 
 ### 泛型 lambda
@@ -746,6 +769,65 @@ std::visit([](auto&& v){
 ## C++23
 
 # 面试题
+
+## 多线程
+
+### thread c++11
+
+一定需要join
+
+```c++
+void work(int a, int b){
+    return a+b;
+}
+
+thread t(work, 1, 2);
+t.join();
+```
+
+### jthread c++20
+
+符合RAII特性，
+
+### async
+
+可以有返回值，返回的是future，要具体的值就调用get
+
+```c++
+std::future<int> f = std::async(std::launch::async, compute);
+std::cout << f.get() << std::endl;
+```
+
+### promise & future
+
+用来在不同线程之间传递结果。
+
+```c++
+#include <iostream>
+#include <thread>
+#include <future>
+
+void worker(std::promise<int> p) {
+    try {
+        int result = 42; // 模拟计算
+        p.set_value(result); // 设置结果
+    } catch (...) {
+        p.set_exception(std::current_exception()); // 设置异常
+    }
+}
+
+int main() {
+    std::promise<int> p;
+    std::future<int> f = p.get_future();
+
+    std::thread t(worker, std::move(p));
+
+    // 在主线程里等待结果
+    std::cout << "Result: " << f.get() << std::endl;
+
+    t.join();
+}
+```
 
 ## static 关键字
 
@@ -1197,7 +1279,7 @@ int main() {
 运行时，根据对象的类型，才决定调用哪个函数  
 use case：虚函数多态，函数指针
 
-## 内存管理 代码区 常量区 全局/静态区 data+bss 栈区 堆
+## 进程内存分布
 
 代码区：存编译后的指令  
 常量区 read only data：存字符串常量或 const 修饰的全局常量  
@@ -1223,6 +1305,19 @@ use case：虚函数多态，函数指针
 低地址
 
 ```
+
+## 线程内存分布
+
+共享部分（同一进程不同线程之间共享的）：
+代码段，数据段，堆，文件描述符等资源
+独立的：
+栈，寄存器上下文（如PC），线程控制块
+
+## sleep
+
+sleep_for是睡一段时间，调用后OS把线程标记为阻塞，设置定时器，将线程刮起，定时器到期后，OS唤醒线程，重新进入就绪队列。
+sleep_until是睡到指定时间，比sleep_for更准
+一般linux的sleep底层都是sleep until的逻辑
 
 ## 函数调用过程
 
