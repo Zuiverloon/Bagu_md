@@ -1,40 +1,63 @@
 # C++
 
-## error & warning
+## 基础
+
+### error & warning
 
 compile error: 编译器会报错 eg:漏了一个分号  
 runtime error:不会报错 eg:数组越界  
 warning:编译器报 warning,如除 0
 
-## 引用&指针
+### 引用&指针
 
-指针存地址，地址指向一段内存，指针可以多级，指针定义时可以不初始化，指针可以指向 null，指针可以变  
+指针存地址，地址指向一段内存，指针可以多级，指针定义时可以不初始化，指针可以指向 null，指针可以变，两次访问（第一次一般去寄存器找到地址，然后通过地址取数）  
 引用就是别名(alias)，(引用只能一级)，引用定义时必须初始化，引用不能指向 null，引用不可变
 
 ### dangling pointer(or stray/wild pointer)
 
 指针所指的内存已经被 delete，之后该指针指向的内存应当不能被访问，解决方法：delete 完就把指针置为 NULL，每次访问内存时先判断是不是指针 NULL
 
-## 函数传参
+### 函数传参
 
 传指针  
 传引用  
 传值：拷贝一个新对象
 
-## const
+### const
 
-## 结构体/类 对齐
+```c++
+const int x = 10; // 值不可变
+int* p	// 普通指针
+const int* p	//指向的值不能改（指针可变）
+int* const p	//指针本身不能改（值可变）
+const int* const p	//指针和值都不能改
 
-编译器有一个对齐字节数，如果某个变量的大小小于对齐字节数，会填充，目的是为了 cpu 访问更快
+void foo(const int& x); // 修饰引用：引用本身不能改
+void print(const std::string& s); // 修饰函数参数：承诺不修改参数
 
-## 类和结构体的区别
+const std::string& getName() const; // 返回 const 引用（常用）
+
+class A {
+public:
+    int get() const; // 修饰成员函数（面试高频） 承诺不修改成员变量 只能调用其他 const 成员函数
+};
+
+class A {
+    const int x; // 必须在构造函数初始化列表中初始化，之后不能修改
+};
+```
+
+### 对齐
+
+编译器有一个对齐字节数，如果某个变量的大小小于对齐字节数，会填充，目的是为了 cpu 访问更快（可见cacheline部分）
+
+### 类和结构体的区别
 
 结构体成员和函数默认 public，类默认 private  
 结构体继承默认 public，类默认 private  
-结构体是值类型，类是引用类型  
 结构体构造函数只能有参
 
-## class
+### class
 
 如果没有写构造函数，编译器会帮我们加一个无参的默认构造函数，如果写了（不管写的是无参还是有参），编译器就不加，子类不显时调用父类的构造函数就会报错  
 **什么时候触发析构？**  
@@ -94,7 +117,7 @@ class A{
 
 ### 虚函数
 
-虚函数表中记录的是函数指针（如果是继承并重写了就记录重载后的函数指针，如果没有继承重写就记录父类的该函数指针），虚函数表位于每个类对象实例最前面的位置，保证性能，调用虚函数就是找到对应的函数指针
+虚函数表vtable就是函数指针列表。对象中有一个vptr指向vtable。虚函数表中记录的是函数指针（如果是继承并重写了就记录重载后的函数指针，如果没有继承重写就记录父类的该函数指针），虚函数表位于每个类对象实例最前面的位置，保证性能，调用虚函数就是找到对应的函数指针。多继承会有多个vptr和vtable。有至少一个虚函数才会生成虚函数表，没有虚函数编译时不会为这个类生成虚函数表。
 
 ### 纯虚函数
 
@@ -115,20 +138,16 @@ final 方法不能被继承重写
 virtual void func() const final{} // 合法，但仍然是final的
 ```
 
-### const 成员函数
-
-const 成员函数不能对类的对象进行修改
-
 ### 多态 动态绑定/静态绑定
 
 什么是多态：可以用基类指针或引用去调用子类的方法
 静态：没有 virtual 修饰的，编译器靠指针或引用的类型来决定调用的函数
 动态：有 virtual 修饰的，执行时根据虚函数表来决定（需要占用更多内存空间作为代价）
 
-## static/dynamic cast
+### static/dynamic cast
 
 static：compile time 的转换  
-dynamic：运行时转换
+dynamic：运行时带类型检查的安全转换
 
 ```c++
 Derived d;
@@ -142,15 +161,19 @@ Base* p_b = new Derived();
 Derived* p_d = dynamic_cast<Derived*>(p_b);//成功
 ```
 
-## STL
+dynamic cast必须要虚函数，因为他依赖RTTI（运行时类型信息，只有虚函数表里有）
+
+### STL
 
 vector:底层是数组
 unordered_map:底层是 hashtable
 map:底层是红黑树
 unordered_set:底层是 hashtable
 set:底层是红黑树
+stack：底层是deque
+deque：底层是一块指针数组+多块固定大小缓冲区
 
-## 元编程 metaprogramming
+### 元编程 metaprogramming
 
 元编程就是：写“在编译期运行的程序”，让程序在运行前就自动生成代码、推导类型、做计算、优化逻辑。
 模板元编程（TMP）  
@@ -158,8 +181,6 @@ constexpr 计算
 类型推导与 type traits  
 if constexpr  
 折叠表达式
-
-# 各种标准
 
 ## C++11
 
@@ -268,7 +289,7 @@ std::cout << x;   // 输出 20
 
 ```
 
-右值引用&&：只能绑定右值，用于实现移动语义，避免拷贝，可用于延长右值生命周期
+右值引用&&：只能绑定右值，用于实现移动语义，避免拷贝，可用于延长右值生命周期。需要右值引用是为了方便偷资源，因为左值有用不能被偷
 
 ```c++
 int&& r1 = 42;            // 绑定字面常量
@@ -306,7 +327,7 @@ public:
 
 ### 完美转发
 
-一种模版编程技巧，可以在模版函数中无损地把参数传递下去，既保持左值右值特性，又避免多余的拷贝和错误的重载匹配。没有完美转发，传参时可能会丢失值类别信息
+一种模版编程技巧，可以在模版函数中无损地把参数传递下去，既保持左值右值特性，又避免多余的拷贝和错误的重载匹配。没有完美转发，函数传参时因为参数有名字，就会变成左值，丢失原本的值类别。
 依赖三个机制：万能引用，引用折叠，forward  
 forward 函数：有条件的转成右值，只有当原始参数是右值时才转
 
@@ -1315,9 +1336,11 @@ use case：虚函数多态，函数指针
 
 ## sleep
 
-sleep_for是睡一段时间，调用后OS把线程标记为阻塞，设置定时器，将线程刮起，定时器到期后，OS唤醒线程，重新进入就绪队列。
-sleep_until是睡到指定时间，比sleep_for更准
-一般linux的sleep底层都是sleep until的逻辑
+this_thread::sleep_for(chrono::seconds(1)) / this_thread::sleep_until()
+os进入内核态把线程设置为block状态，线程不再被调度。
+os会设置一个定时器放入timer_queue。os硬件定时器会定时产生timer interruption去检查timer_queue。发现有进程该唤醒了就将线程转为ready并进入调度。
+os的timer interruption周期可能大于睡眠时间，所以sleep_for会一直累加误差。
+和conditional_variable的wait不同，wait是被其他线程唤醒
 
 ## 函数调用过程
 
