@@ -64,10 +64,9 @@ abeabf 此时(a,e)失败，没有相同前缀后缀，移动匹配串到
 abeabf  
 abeabf
 
-```java
-public static int[] getkmpnext(String pattern){
-    int[] next = new int[pattern.length()];
-    char[] c = pattern.toCharArray();
+```c++
+vector<int> getkmpnext(string c){
+    vector<int> next = vector<int>(c.length(),0);
     next[0] = 0;//if the matching fails at i, then next[i] will be the next starting position(the suffix of the pattern is equal to the prefix of the pattern).
     for (int i = 1,j = 0;i<c.length;i++){
         while (j>0 && c[i]!=c[j])j = next[j-1];
@@ -78,6 +77,7 @@ public static int[] getkmpnext(String pattern){
     }
     return next;
 }
+// ababab [0,0,1,2,3,4]
 
 public static int kmp(String s,String pattern){
     char[] sc = s.toCharArray();char[] pc = pattern.toCharArray();
