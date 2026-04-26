@@ -304,4 +304,14 @@ binlog：mysql server 层面的 log，记录每个语句的原始逻辑，用于
 **特殊优化**  
 索引下推（在扫描索引时就过滤数据），分区裁剪（只扫描符合条件的分区），延迟关联（先过滤小表的数据），派生表合并（将派生表合并到外层查询），执行缓存计划
 
-## join 的底层算法
+## MDL锁
+
+确保查询数据时，其他人不能修改表结构。
+DML读数据时，自动加上表级别MDL读共享锁  
+DDL操作修改结构时，会尝试获取MDL排他锁，写锁与读锁互斥，有一个会话持有读锁，DDL就要等待
+**如何排查**
+Waiting for table metadata lock 问题时：
+
+1. 使用 SHOW PROCESSLIST; 命令，可以快速找到状态为 Waiting for table metadata lock 的会话，这就是被阻塞的 DDL 操作
+2. 查询 performance_schema.metadata_locks 表（MySQL 5.7+ 默认开启）。通过关联查询，可以找到持有锁（LOCK_STATUS = 'GRANTED'）的会话 ID 和它正在执行的 SQL
+3. kill <会话ID>

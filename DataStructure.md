@@ -55,6 +55,8 @@ LinkedList: save elements in distributed space. Length not fixed. 查找 O(n)，
 
 ## kmp
 
+https://leetcode.cn/problems/find-the-index-of-the-first-occurrence-in-a-string/
+
 思想：当匹配失败时，找 pattern 串的相同前缀和后缀  
 abeababeabf  
  ｜  
@@ -79,21 +81,86 @@ vector<int> getkmpnext(string c){
 }
 // ababab [0,0,1,2,3,4]
 
-public static int kmp(String s,String pattern){
-    char[] sc = s.toCharArray();char[] pc = pattern.toCharArray();
-    int[] next = getkmpnext(pattern);
-    int n = s.length();
-    int m = pattern.length();
-    for (int i = 0,j = 0;i<n;i++){
-        while (j>0 && sc[i]!=pc[j])j = next[j-1];
-        if (sc[i] == pc[j])j++;
-        if (j == m)return i-m+1;
+int strStr(string haystack, string needle) {
+        vector<int> flink = getFlink(needle);
+        // cout<<"flink fin\n";
+        for (int i = 0,j = 0;i<haystack.length();i++){
+            // cout<<i<<" "<<j<<"\n";
+            while (j>0 && haystack[i]!=needle[j]){
+                j = flink[j-1];
+            }
+            //  cout<<i<<" "<<j<<" aa\n";
+            if (haystack[i] == needle[j]){
+                j++;
+            }
+            if (j == needle.length()) {
+                return i-j+1;
+            }
+        }
+        return -1;
     }
-    return -1;
-}
 ```
 
 ## Sort
+
+**验证模版**
+
+```c++
+#include <vector>
+#include <algorithm>
+#include <random>
+#include <iostream>
+
+using namespace std;
+
+template <typename T>
+void shuffleVector(vector<T> &v)
+{
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::shuffle(v.begin(), v.end(), gen);
+}
+
+void printVector(std::vector<int> &v)
+{
+    for (int i = 0; i < v.size(); i++)
+    {
+        std::cout << v[i] << " \n"[i == v.size() - 1];
+        // printf("%lld%c", v[i], " \n"[i == v.size() - 1]);
+    }
+}
+
+
+void validate(vector<int> &v)
+{
+    bool valid = true;
+    for (int i = 0; i < v.size(); i++)
+    {
+        if (v[i] != i + 1)
+        {
+            valid = false;
+            break;
+        }
+    }
+    cout << (valid ? "" : "in") << "valid\n";
+}
+
+int main()
+{
+    int n = 100;
+    vector<int> v(n, 0);
+    for (int i = 0; i < n; i++)
+    {
+        v[i] = i + 1;
+    }
+    shuffleVector(v);;
+    // qsort(v, 0, v.size() - 1);
+    // qsort(v);
+    // msortb(v);
+    validate(v);
+    printVector(v);
+}
+```
 
 ### **insertion sort O(n2)**
 
@@ -166,37 +233,40 @@ public static void bubblesort(int[] arr){
 
 ### **quicksort O(nlogn)**
 
+https://leetcode.cn/problems/kth-largest-element-in-an-array/
+
 选出一个 pivot value, put elements smaller than pivot to the left side, put elements greater than pivot value to the right side, recursively do sort on the left side and the right side.
 
-```java
-public static void quicksort(int[] arr,int left,int right){
-        if (left>=arr.length || left<0 || right>=arr.length || right<0) return;
-        int pivot = arr[left];
-        int l = left,r = right;
-        if(l<r){
-            while (l<r) {
-                while (l < r && arr[r] > pivot) r--;
-                if (r > l) {
-                    arr[l] = arr[r];l++;
-                }
-                while (l < r && arr[l] < pivot) l++;
-                if (r > l) {
-                    arr[r] = arr[l];r--;
-                }
+```c++
+void quicksort(vector<int> arr,int left,int right){
+    if (left>=arr.length || left<0 || right>=arr.length || right<0) return;
+    int pivot = arr[left];
+    int l = left,r = right;
+    if(l<r){
+        while (l<r) {
+            while (l < r && arr[r] > pivot) r--;
+            if (r > l) {
+                arr[l] = arr[r];l++;
             }
-            arr[l] = pivot;
-            quicksort(arr,left,l-1);
-            quicksort(arr,l+1,right);
+            while (l < r && arr[l] < pivot) l++;
+            if (r > l) {
+                arr[r] = arr[l];r--;
+            }
         }
+        arr[l] = pivot;
+        quicksort(arr,left,l-1);
+        quicksort(arr,l+1,right);
     }
+}
 ```
 
 ### **merge sort O(nlogn)**
 
-(分治法)divide the given list into 2 halves, sort the 2 halves and merge them together, recursively
+递归：(分治法)divide the given list into 2 halves, sort the 2 halves and merge them together, recursively
+不递归：先两个一组，再四个一组，再8个一组。。。
 
-```java
-public static void merge(int[] arr,int low, int mid,int high,int[] tmp){
+```c++
+void merge(vector<int> arr,int low, int mid,int high,vector<int> tmp){
         int j = low,k = mid+1;
         int tmpp = 0;
         while (j<=mid && k<=high){
@@ -219,7 +289,7 @@ public static void merge(int[] arr,int low, int mid,int high,int[] tmp){
         return;
     }
 
-    public static void mergesort(int[] arr,int low,int high,int[] tmp){
+void mergesort(vector<int> arr,int low,int high,vector<int> tmp){
         if (low<high){
             int mid = (low+high)/2;
             mergesort(arr,low,mid,tmp);
@@ -236,7 +306,7 @@ make a heap to get the top value
 recursively find the top in each loop
 
 ```java
-public static void heapsort(int[] arr){
+void heapsort(vector<int> arr){
         for (int i = arr.length/2;i>=0;i--){
             heapify(arr,i,arr.length-1);
         }
@@ -248,7 +318,7 @@ public static void heapsort(int[] arr){
         }
     }
 
-    public static void heapify(int[] arr,int i,int right){
+void heapify(int[] arr,int i,int right){
         // make a max heap. arr[i] should be greater than arr[i*2](if existed) and arr[i*2+1](if existed)
         while (i*2<=right){ // make sure that node i has children
             int t = i*2;// t is the index of the greater children
@@ -331,8 +401,175 @@ for (int p = 1; p <= n; p++) {
 
 ## LRU cache
 
-环形双向链表+hash 表：https://leetcode.cn/problems/lru-cache-lcci/
+https://leetcode.cn/problems/lru-cache-lcci/
+
+环形双向链表+hash 表：
+
+## LFU cache
+
+https://leetcode.cn/problems/lfu-cache/
+
+需求：
+
+1. update(key, value). If full, remove the least recent item
+2. get(key), if key does not exist, return -1
+
+一个map记录key到node节点，另一个map key是频次，value是环形双向链表
 
 ## 莫队/回滚莫队
 
 左端点抖动，右端点变大 lc3636(https://leetcode.cn/problems/threshold-majority-queries/description/)
+
+## Ringbuffer
+
+需要push方法，pop方法
+
+### 无同步版
+
+vector，一个head，一个tail，写入head，从tail拿，多余一个格子/或多使用一个size变量用来判断是否已满  
+需要lock就在push和pop的时候用lock_guard(mutex)
+
+```c++
+#include <vector>
+#include <iostream>
+#include <optional>
+#include <mutex>
+
+using namespace std;
+// requirement
+// 1. a ringbuffer with capacity of x
+// 2. push(if full then abort), pop(if empty then return -1), empty, full
+// 3. single consumer single producer, no lock
+// 4.
+template <typename T>
+class LockRingBuffer
+{
+private:
+    int capacity;
+    int size;
+    vector<T> queue;
+    int head;
+    int tail;
+    mutex mut;
+
+public:
+    LockRingBuffer(int _capacity)
+    {
+        this->capacity = _capacity;
+        this->size = 0;
+        this->queue = vector<T>(capacity);
+        head = 0;
+        tail = 0;
+    }
+
+    bool push(T val)
+    {
+        lock_guard<mutex> lock(mut);
+        if (head == tail && size > 0)
+        {
+            return false;
+        }
+        queue[head++] = val;
+        head %= capacity;
+        size++;
+        return true;
+    }
+
+    optional<T> pop()
+    {
+        lock_guard<mutex> lock(mut);
+        if (head == tail && size == 0)
+        {
+            return -1;
+        }
+        T ans = queue[tail++];
+        tail %= capacity;
+        size--;
+        return ans;
+    }
+
+    bool full()
+    {
+        return head == tail && size > 0;
+    }
+    bool empty()
+    {
+        return head == tail && size == 0;
+    }
+};
+```
+
+### SPSC
+
+head和tail都使用atomic int，写的时候load head是acquire，load tail是relaxed，store tail是release，读的时候load tail是acquire，store head是release
+
+```c++
+#include <atomic>
+#include <vector>
+#include <optional>
+#include <cstdint>
+template <typename T>
+class SPSCRingBuffer
+{
+private:
+    std::vector<T> buffer_;
+    size_t capacity_;
+    size_t mask_; // 用于位运算取模：capacity - 1 (要求 capacity 是 2 的幂)
+
+    alignas(64) std::atomic<uint64_t> head_{0}; // 单调递增
+    alignas(64) std::atomic<uint64_t> tail_{0}; // 单调递增
+
+public:
+    SPSCRingBuffer(size_t cap) : buffer_(cap), capacity_(cap), mask_(cap - 1)
+    {
+        // 确保容量是 2 的幂，以便使用位运算优化
+        assert((cap & mask_) == 0);
+    }
+
+    bool push(const T &item)
+    {
+        // 1. 读取当前的 head 和 tail
+        uint64_t current_tail = tail_.load(std::memory_order_relaxed);
+        uint64_t current_head = head_.load(std::memory_order_acquire);
+
+        // 2. 判满：如果差值等于容量，说明满了
+        if (current_tail - current_head >= capacity_)
+        {
+            return false;
+        }
+
+        // 3. 计算物理位置 (使用位与代替取模)
+        size_t idx = current_tail & mask_;
+        buffer_[idx] = item;
+
+        // 4. 推进 tail
+        tail_.store(current_tail + 1, std::memory_order_release);
+        return true;
+    }
+
+    std::optional<T> pop()
+    {
+        // 1. 读取当前的 head 和 tail
+        uint64_t current_head = head_.load(std::memory_order_relaxed);
+        uint64_t current_tail = tail_.load(std::memory_order_acquire);
+
+        // 2. 判空
+        if (current_tail - current_head == 0)
+        {
+            return std::nullopt;
+        }
+
+        // 3. 计算物理位置
+        size_t idx = current_head & mask_;
+        T item = buffer_[idx];
+
+        // 4. 推进 head
+        head_.store(current_head + 1, std::memory_order_release);
+        return item;
+    }
+};
+```
+
+### MPMC
+
+因为可能多个线程同时拿到tail的值，所以需要引入slot 机制，生产者需通过CAS更新slot状态，CAS成功的那个生产者才拥有写入权
