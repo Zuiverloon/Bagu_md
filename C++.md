@@ -147,7 +147,7 @@ unordered_set:底层是 hashtable
 set:底层是红黑树
 
 stack:底层是deque
-deque:底层是一块指针数组+多块固定大小缓冲区
+deque:底层是一块指针数组/中控器(map)+多块固定大小缓冲区(chunk)
 
 ### 元编程 metaprogramming
 
@@ -222,7 +222,7 @@ lambda 可以访问外部变量，但必须通过捕获列表声明
 | 可变捕获（mutable） | `[x]() mutable` | 允许修改值捕获的变量（默认是 const） |
 
 **编译器如何处理 lambda**  
-lambda 会被编译器转换为一个匿名类，重载 operator(),本质上是一个函数对象 functor，捕获的变量会变成类的成员变量。
+lambda 会被编译器转换为一个匿名类/struct，生成成员变量(默认const，除非mutable)，重载operator()将lambda函数体变为operator()的内容,本质上是一个函数对象 functor，捕获的变量会变成类的成员变量。
 
 **高级用法**  
 可变 lambda(mutable)，默认 lambda 是 const 的，不能修改捕获的值，使用 mutable 可以解除限制
@@ -341,7 +341,20 @@ int main() {
 
 ### 万能引用(Universal Reference)
 
-T&&，类型是模版参数或 auto&&
+T&&，类型是模版参数或 auto&&，在函数模版中原封不同的保留参数的身份(左值/右值)，不然的话传进来的参数在往下传都是左值
+
+```c++
+// 目标函数
+void process(int& lvalue) { /* 处理左值 */ }
+void process(int&& rvalue) { /* 处理右值，可能触发移动 */ }
+
+// 你的包装函数 (有缺陷的版本)
+template<typename T>
+void wrapper(T arg) {
+    process(arg); // 无论传入什么，arg 在这里都变成了左值！
+}
+
+```
 
 ### 引用折叠(reference collapsing)
 

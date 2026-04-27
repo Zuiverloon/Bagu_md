@@ -573,3 +573,112 @@ public:
 ### MPMC
 
 因为可能多个线程同时拿到tail的值，所以需要引入slot 机制，生产者需通过CAS更新slot状态，CAS成功的那个生产者才拥有写入权
+
+```c++
+template <typename T>
+class MPMCRingBuffer
+{
+private:
+    // 为每个原子变量进行缓存行对齐，防止伪共享
+    struct alignas(64) AlignedAtomicSize
+    {
+        std::atomic<size_t> value;
+        AlignedAtomicSize() : value(0) {}
+    };
+
+public:
+    explicit MPMCRingBuffer(size_t capacity)
+        : capacity_(capacity),
+          buffer_(capacity),
+          slots_(capacity)
+    {
+        // 初始化槽位序列号：slot[i] = i
+        for (size_t i = 0; i < capacity_; ++i)
+        {
+            slots_[i].value.store(i, std::memory_order_relaxed);
+        }
+        head_.store(0, std::memory_order_relaxed);
+        tail_.store(0, std::memory_order_relaxed);
+    }
+
+    bool push(const T &item)
+    {
+        size_t pos;
+        while (true)
+        {
+            pos = tail_.load(std::memory_order_relaxed);
+            size_t idx = pos % capacity_;
+            // 读取该槽位的序列号
+            size_t seq = slots_[idx].value.load(std::memory_order_acquire);
+
+            // 检查序列号是否匹配，判断槽位是否可用
+            intptr_t diff = (intptr_t)seq - (intptr_t)pos;
+            if (diff == 0)
+            {
+                // 尝试抢占 tail 指针
+                if (tail_.compare_exchange_weak(pos, pos + 1,
+                                                std::memory_order_relaxed, std::memory_order_relaxed))
+                {
+                    break; // 抢占成功
+                }
+            }
+            else if (diff < 0)
+            {
+                // 队列满
+                return false;
+            }
+            // 如果 diff > 0，说明 tail 落后了，重试
+        }
+
+        // 写入数据
+        buffer_[pos % capacity_] = item;
+        // 更新槽位序列号，标记为“已填充”
+        slots_[pos % capacity_].value.store(pos + 1, std::memory_order_release);
+        return true;
+    }
+
+    std::optional<T> pop()
+    {
+        size_t pos;
+        while (true)
+        {
+            pos = head_.load(std::memory_order_relaxed);
+            size_t idx = pos % capacity_;
+            size_t seq = slots_[idx].value.load(std::memory_order_acquire);
+
+            // 检查序列号是否匹配，判断槽位是否有数据
+            intptr_t diff = (intptr_t)seq - (intptr_t)(pos + 1);
+            if (diff == 0)
+            {
+                // 尝试抢占 head 指针
+                if (head_.compare_exchange_weak(pos, pos + 1,
+                                                std::memory_order_relaxed, std::memory_order_relaxed))
+                {
+                    break; // 抢占成功
+                }
+            }
+            else if (diff < 0)
+            {
+                // 队列空
+                return std::nullopt;
+            }
+            // 如果 diff > 0，说明 head 落后了，重试
+        }
+
+        T item = buffer_[pos % capacity_];
+        // 更新槽位序列号，标记为“已消费”，允许生产者复用
+        slots_[pos % capacity_].value.store(pos, std::memory_order_release);
+        return item;
+    }
+
+private:
+    const size_t capacity_;
+    std::vector<T> buffer_;
+    std::vector<AlignedAtomicSize> slots_;
+
+    alignas(64) std::atomic<size_t> head_;
+    alignas(64) std::atomic<size_t> tail_;
+};
+```
+
+## Lock free queue
