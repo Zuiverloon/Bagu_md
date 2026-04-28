@@ -682,3 +682,238 @@ private:
 ```
 
 ## Lock free queue
+
+```c++
+template <typename T>
+class LockFreeQueue
+{
+private:
+    struct Node
+    {
+        T data;
+        std::atomic<Node *> next;
+        Node() : next(nullptr) {}
+        Node(const T &val) : data(val), next(nullptr) {}
+    };
+
+    // 带有计数器的指针，用于解决 ABA 问题（可选，简单实现可不用）
+    // 这里为了简化，直接使用裸指针，但在高并发 delete 时需小心
+    std::atomic<Node *> head_;
+    std::atomic<Node *> tail_;
+
+public:
+    LockFreeQueue()
+    {
+        // 创建一个空节点（哨兵节点），head 和 tail 都指向它
+        Node *dummy = new Node();
+        head_.store(dummy, std::memory_order_relaxed);
+        tail_.store(dummy, std::memory_order_relaxed);
+    }
+
+    ~LockFreeQueue()
+    {
+        // 析构时清理所有节点
+        while (Node *node = head_.load(std::memory_order_relaxed))
+        {
+            head_.store(node->next.load(std::memory_order_relaxed), std::memory_order_relaxed);
+            delete node;
+        }
+    }
+
+    // 禁止拷贝
+    LockFreeQueue(const LockFreeQueue &) = delete;
+    LockFreeQueue &operator=(const LockFreeQueue &) = delete;
+
+    void push(const T &value)
+    {
+        Node *newNode = new Node(value);
+
+        while (true)
+        {
+            Node *tail = tail_.load(std::memory_order_acquire);
+            Node *next = tail->next.load(std::memory_order_acquire);
+
+            // 1. 检查 tail 是否还是当前的 tail（防止其他线程修改了 tail）
+            if (tail == tail_.load(std::memory_order_acquire))
+            {
+                if (next == nullptr)
+                {
+                    // 2. 队列尾部确实是空的，尝试将新节点链接上去
+                    // 如果 CAS 成功，说明我们抢到了插入权
+                    if (tail->next.compare_exchange_weak(next, newNode,
+                                                         std::memory_order_release, std::memory_order_relaxed))
+                    {
+                        // 3. 插入成功，尝试更新 tail 指针（即使失败也没关系，其他线程会帮忙更新）
+                        tail_.compare_exchange_weak(tail, newNode,
+                                                    std::memory_order_release, std::memory_order_relaxed);
+                        return;
+                    }
+                }
+                else
+                {
+                    // 4. 队列落后了，tail 指向的节点后面还有节点，帮忙推进 tail
+                    tail_.compare_exchange_weak(tail, next,
+                                                std::memory_order_release, std::memory_order_relaxed);
+                }
+            }
+        }
+    }
+
+    bool pop(T &result)
+    {
+        while (true)
+        {
+            Node *head = head_.load(std::memory_order_acquire);
+            Node *tail = tail_.load(std::memory_order_acquire);
+            Node *next = head->next.load(std::memory_order_acquire);
+
+            // 1. 检查 head 是否还是当前的 head
+            if (head == head_.load(std::memory_order_acquire))
+            {
+                if (head == tail)
+                {
+                    // 2. 队列可能是空的
+                    if (next == nullptr)
+                    {
+                        return false; // 确实为空
+                    }
+                    // 3. 队列落后了，tail 还没追上 head，帮忙推进 tail
+                    tail_.compare_exchange_weak(tail, next,
+                                                std::memory_order_release, std::memory_order_relaxed);
+                }
+                else
+                {
+                    // 4. 读取数据（因为 next 可能被其他线程 delete，所以要尽快读）
+                    result = next->data;
+
+                    // 5. 尝试将 head 移动到 next
+                    if (head_.compare_exchange_weak(head, next,
+                                                    std::memory_order_release, std::memory_order_relaxed))
+                    {
+                        // 6. 成功出队，删除旧的哨兵节点
+                        delete head;
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+};
+```
+
+## Orderbook
+
+一般生产中生产者可以是多个线程，把所有订单放在一个无锁ringbuffer中，一个线程专门处理并撮合。
+那一个撮合线程不能sleep，如果没东西撮合就std::this_thread::yield();
+**撮合引擎崩了怎么办？**
+加入ringbuffer时可以写入kafka日志，然后重启时从kafka中恢复。
+
+```c++
+class Order
+{
+public:
+    int price;
+    int volume;
+    bool isBuy;
+    Order(int _price, int _volume, bool _isBuy) : price(_price),
+                                                  volume(_volume),
+                                                  isBuy(_isBuy)
+    {
+    }
+};
+
+class OrderBook
+{
+private:
+    map<int, queue<Order>, greater<int>> buy;
+    map<int, queue<Order>, less<int>> sell;
+
+    void matchBuy(Order &o)
+    {
+        while (o.volume > 0 && sell.size() > 0)
+        {
+            int bestAsk = sell.begin()->first;
+            cout << "bestAsk " << bestAsk << "\n";
+            if (bestAsk < o.price)
+            {
+                break;
+            }
+            queue<Order> &q = sell.begin()->second;
+            Order &fo = q.front();
+            if (fo.volume <= o.volume)
+            {
+                cout << "txn1 " << fo.volume << "\n";
+                o.volume -= fo.volume;
+                q.pop();
+            }
+            else
+            {
+                cout << "txn2 " << o.volume << "\n";
+
+                fo.volume -= o.volume;
+                o.volume = 0;
+            }
+            if (sell.begin()->second.size() == 0)
+            {
+                sell.erase(sell.begin());
+            }
+        }
+        if (o.volume > 0)
+        {
+            cout << "add " << o.price << " " << o.volume << " " << o.isBuy << "\n";
+            buy[o.price].push(o);
+        }
+    }
+
+    void matchSell(Order &o)
+    {
+        while (o.volume > 0 && buy.size() > 0)
+        {
+            int bestBid = buy.begin()->first;
+            cout << "bestBid " << bestBid << "\n";
+
+            if (bestBid < o.price)
+            {
+                break;
+            }
+            queue<Order> &q = buy.begin()->second;
+            Order &fo = q.front();
+            if (fo.volume <= o.volume)
+            {
+                cout << "txn1 " << fo.volume << "\n";
+                o.volume -= fo.volume;
+                q.pop();
+            }
+            else
+            {
+                cout << "txn2 " << o.volume << "\n";
+
+                fo.volume -= o.volume;
+                o.volume = 0;
+            }
+            if (buy.begin()->second.size() == 0)
+            {
+                buy.erase(buy.begin());
+            }
+        }
+        if (o.volume > 0)
+        {
+            cout << "add " << o.price << " " << o.volume << " " << o.isBuy << "\n";
+            sell[o.price].push(o);
+        }
+    }
+
+public:
+    void addOrder(Order &order)
+    {
+        if (order.isBuy)
+        {
+            matchBuy(order);
+        }
+        else
+        {
+            matchSell(order);
+        }
+    }
+};
+```

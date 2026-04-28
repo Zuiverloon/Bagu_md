@@ -39,3 +39,19 @@ good at split big problems into small pieces and asking question efficiently. im
 
 stubborn: when debugging some tricky problems, I barely stop until I find useful infor. Forget about lunch time, asking if I am going for lunch, I will say maybe 10 minutes more. Even during lunch, still thinking about that problem.  
 over design: when asked to build a small module, come up with many ideas(many what-if), then the module becomes larger and larger. some functionality may not be used.
+
+## tight schedule
+
+generate barra data within limited time. apply for extra resource.
+
+## tough task
+
+os/vm related issue. ask help from service provider. export log, online meetings. if creating new vm, same issue. Note on the SOP(Standard Operating Procedure).
+
+## Why leaving？
+
+More closer to core business(trading). More challenge.
+
+## Why akuna?
+
+HFT, option&future, global
