@@ -27,7 +27,7 @@ During spare time, I enjoy coding and I almost spend half of my spare time in fr
 
 ## Career plan for 5 years
 
-I would like to work close to core business of the company, trading related system in akuna. I have already got used to work in financial industry, my tech stack fits the need of most trading-related companies, I plan to make progress from junior to senior with 2/3 years, strengthening my speciality on building trading related systems, if possible I would love to mentor new graduates. focus on IC, enjoying development work.
+I would like to work close to core business of the company, trading related system in akuna. My tech stack fits the need of most trading-related companies, some experience,I plan to make progress from junior to mid-level or senior with 2/3 years, strengthening my speciality on building HFT,low latency trading related systems, if possible I would love to mentor new graduates. focus on IC, enjoying development work, coding and solving problems. keep learning, explore some leadership skills.
 
 ## strength
 
@@ -55,3 +55,11 @@ More closer to core business(trading). More challenge.
 ## Why akuna?
 
 HFT, option&future, global
+
+## 反问
+
+working type？agile？  
+who gives the requirement？  
+what is the responsibility in first month?  
+qualification needed?
+mentor programme？businees trip or any chance of visiting other offices or even global hq?
